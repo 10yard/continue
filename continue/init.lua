@@ -19,11 +19,33 @@ function continue.startplugin()
 	local mac, scr, cpu, mem
 	local frame_stop, frame_remain, counter
 	local num_continues, flash
-	local colors_table = { 0xffffffff, 0xff0403ff }
+
+	local CYAN = 0xff14f3ff
+	local BLACK = 0xff000000
+	local WHITE = 0xffffffff
+	local RED = 0xffff0000
+	local colors_table = { WHITE, CYAN }
+
 	local pos_table = {}
 	pos_table["dkong"] = {219, 9}
 	pos_table["dkongx"] = {219, 9}
 	pos_table["dkongjr"] = {229, 154}
+	local message_table = {
+		"######  ##   ##  ####   ##   ##              ## ##   ## ##   ## ######           ######  #####",
+		"##   ## ##   ## ##  ##  ##   ##              ## ##   ## ### ### ##   ##            ##   ##   ##",
+		"##   ## ##   ## ##      ##   ##              ## ##   ## ####### ##   ##            ##   ##   ##",
+		"##   ## ##   ##  #####  #######              ## ##   ## ####### ##   ##            ##   ##   ##",
+		"######  ##   ##      ## ##   ##              ## ##   ## ## # ## ######             ##   ##   ##",
+		"##      ##   ## ##   ## ##   ##         ##   ## ##   ## ##   ## ##                 ##   ##   ##",
+		"##       #####   #####  ##   ##          #####   #####  ##   ## ##                 ##    #####",
+		"",
+		"                  ####   #####  ##   ##  ######  ###### ##   ## ##   ##  ######",
+		"                 ##  ## ##   ## ###  ##    ##      ##   ###  ## ##   ##  ##",
+		"                ##      ##   ## #### ##    ##      ##   #### ## ##   ##  ##",
+		"                ##      ##   ## #######    ##      ##   ####### ##   ##  #####",
+		"                ##      ##   ## ## ####    ##      ##   ## #### ##   ##  ##",
+		"                 ##  ## ##   ## ##  ###    ##      ##   ##  ### ##   ##  ##",
+		"                  ####   #####  ##   ##    ##    ###### ##   ##  #####   ######"}
 
 	function initialize()
 		if tonumber(emu.app_version()) >= 0.227 then
@@ -69,14 +91,15 @@ function continue.startplugin()
 						frame_remain = frame_stop - scr:frame_number()
 						if frame_remain > 0 then
 							mem:write_u8(0x6009, 8) 							-- freeze the death timer
-							counter = string.format("%02s", math.floor((frame_remain) / 60) + 1)
 
-							write_text(0x76ce, "              ")
-							write_text(0x76cf, "      " .. counter .. "      ")
-							write_text(0x76d0, "              ")
-							write_text(0x76d1, " PUSH JUMP TO ");
-							write_text(0x76d2, "   CONTINUE   ")
-							write_text(0x76d3, "              ")
+							scr:draw_box(96, 57, 144, 168, BLACK, BLACK)
+							draw_graphic(message_table, 120, 65)
+							counter = math.floor((frame_remain) / 6.25)
+							_col = CYAN
+							if counter < 35 and counter % 8 >= 4 then
+								_col = RED
+							end
+							scr:draw_box(128, 65, 136, 65 + counter, _col, _col) -- draw countdown timer
 
 							if mem:read_u8(0x6010) >= 128 then					-- read input state and check for jump
 								num_continues = num_continues + 1           	-- chalk up a continue
@@ -84,8 +107,6 @@ function continue.startplugin()
 								frame_stop = scr:frame_number()                 -- stop the countdown timer
 								flash = true
 							end
-						else
-							write_text(0x76cf, "       *      ") --  time's up
 						end
 					end
 				end
@@ -106,6 +127,18 @@ function continue.startplugin()
 			mem:write_u8(start_address - ((key - 1) * 32), _chr[string.sub(text, key, key)])
 		end
 	end	
+
+	function draw_graphic(data, pos_y, pos_x)
+		local _col
+		for _y, line in pairs(data) do
+			for _x=1, string.len(line) do
+				_col = string.sub(line, _x, _x)
+				if _col ~= " " then
+					scr:draw_box(pos_y -_y, pos_x + _x, pos_y -_y + 1, pos_x +_x + 1, CYAN, CYAN)
+				end
+			end
+		end
+	end
 
 	emu.register_start(function()
 		initialize()

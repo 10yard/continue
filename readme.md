@@ -1,6 +1,6 @@
 # **Continue plugin for Donkey Kong, Donkey Kong II and Donkey Kong Junior** #
 
-Gives the player an opportunity to continue gameplay from the current stage sacrificing their score.
+Gives player an opportunity to continue gameplay from the current level/stage.  The number of continues is made visible.
 
 Tested with latest MAME version 0.241
 
