@@ -4,13 +4,12 @@ Gives player an opportunity to continue gameplay from the current level/stage.  
 
 Tested with latest MAME version 0.241
 
-Fully compatible with all MAME versions from 0.227
+Fully compatible with all MAME versions from 0.196
 
   
 ## Installing and running
  
 The Plugin is installed by copying the "continue" folder into your MAME plugins folder.
-Galaga game sounds are supported on Windows and Raspberry Pi 4/400.
 
 The Plugin is run by adding `-plugin continue` to your MAME arguments e.g.
 
