@@ -1,6 +1,19 @@
-# **Continue plugin for Donkey Kong, Donkey Kong II and Donkey Kong Junior** #
+# **Continue Plugin for MAME** #
 
-Gives player an opportunity to continue gameplay from the current level/stage.  The number of continues is made visible.
+by Jon Wilson (10yard)
+
+Adds a continue option with countdown timer.  Push P1 Start button to continue your game.  Your score will be reset.
+A tally of the number of continues appears at top of screen.
+
+The plugin currently supports:
+
+  Pac-Man
+  Ms. Pac-Man
+  Jr. Pac-Man
+  Pac-Man Plus
+  Donkey Kong
+  Donkey Kong Junior
+  Donkey Kong II (Jumpman Returns)
 
 Tested with latest MAME version 0.241
 
@@ -13,11 +26,8 @@ The Plugin is installed by copying the "continue" folder into your MAME plugins 
 
 The Plugin is run by adding `-plugin continue` to your MAME arguments e.g.
 
-```mame dkong -plugin continue```  
+``` mame mspacman -plugin continue```  
 
-or
-
-```mame dkongjr -plugin continue```  
 
 ## Feedback
 

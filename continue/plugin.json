@@ -1,7 +1,7 @@
 {
 "plugin": {
 "name": "continue",
-"description": "Continue Plugin for Donkey Kong",
+"description": "Continue Plugin for MAME",
 "version": "0.1",
 "author": "Jon Wilson (10yard)",
 "type": "plugin",
