@@ -9,8 +9,9 @@ The plugin currently supports:
 
   Pac-Man
   Ms. Pac-Man
-  Jr. Pac-Man
+  Ms. Pac-Attack
   Pac-Man Plus
+  Galaxian
   Donkey Kong
   Donkey Kong Junior
   Donkey Kong II (Jumpman Returns)

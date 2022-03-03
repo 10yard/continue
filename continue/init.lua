@@ -32,18 +32,20 @@ function continue.startplugin()
 	-- compatible roms with associated function and position data
 	local rom_function
 	local rom_table = {}
-	rom_table["pacman"] = {"pacman", 18, 216}
-	rom_table["mspacman"] = {"pacman", 18, 216}
-	rom_table["jrpacman"] = {"pacman", 18, 216}
-	rom_table["pacplus"] = {"pacman", 18, 216}
-	rom_table["dkong"] = {"dkong", 219, 9}
-	rom_table["dkongjr"] = {"dkong", 229, 154}
-	rom_table["dkongx"] = {"dkong", 219, 9}
-	rom_table["dkongx11"] = {"dkong", 219, 9}
-	rom_table["dkongpe"] = {"dkong", 219, 9}
-	rom_table["dkonghrd"] = {"dkong", 219, 9}
-	rom_table["dkongf"] = {"dkong", 219, 9}
-	rom_table["dkongj"] = {"dkong", 219, 9}
+	rom_table["galaxian"] = {"galax_driver", 52, 216}
+	rom_table["pacman"] = {"pac_driver", 18, 216}
+	rom_table["mspacman"] = {"pac_driver", 18, 216}
+	rom_table["mspacmat"] = {"pac_driver", 18, 216}
+	rom_table["pacplus"] = {"pac_driver", 18, 216}
+	rom_table["dkong"] = {"dk_driver", 219, 9}
+	rom_table["dkongjr"] = {"dk_driver", 229, 154}
+	rom_table["dkongx"] = {"dk_driver", 219, 9}
+	rom_table["dkongx11"] = {"dk_driver", 219, 9}
+	rom_table["dkongpe"] = {"dk_driver", 219, 9}
+	rom_table["dkonghrd"] = {"dk_driver", 219, 9}
+	rom_table["dkongf"] = {"dk_driver", 219, 9}
+	rom_table["dkongj"] = {"dk_driver", 219, 9}
+	--rom_table["jrpacman"] = {"pac_driver", 18, 216} -- score needs to be blanked on reset
 
 	-- message to be displayed in continue box
 	local message_table = {
@@ -63,19 +65,19 @@ function continue.startplugin()
 		"           ##   ##   ##          ##  ## ##   ## ##  ###    ##      ##   ##  ### ##   ## ##             ",
 		"           ##    #####            ####   #####  ##   ##    ##    ###### ##   ##  #####  #######        "
 		}
-
+	local message_table_double = {}
 
 	-- GAME/ROM SPECIFIC FUNCTIONS
 	------------------------------
 
-	function pacman()
+	function pac_driver()
 		one_player_game = mem:read_u8(0x4e70) == 0
 		game_mode = mem:read_u8(0x4e00)
+		starting_lives = mem:read_u8(0x4e6f)
+		lives_lost = game_mode == 3 and mem:read_u8(0x4e14) == 0 and mem:read_u8(0x4e04) == 6
 		reset_continue = mem:read_u8(0x4e03) == 3
 		reset_tally = game_mode == 2 or tally == nil
 		show_tally = game_mode == 3
-		starting_lives = mem:read_u8(0x4e6f)
-		lives_lost = game_mode == 3 and mem:read_u8(0x4e14) == 0 and mem:read_u8(0x4e04) == 6
 
 		if one_player_game then
 			if reset_tally then
@@ -99,13 +101,12 @@ function continue.startplugin()
 						mem:write_u8(0x4e14, starting_lives)  --update number of lives
 						mem:write_u8(0x4e15, starting_lives - 1)  --update displayed number of lives
 						frame_stop = nil
-
 						--reset score
-						for _add = 0x43f7, 0x43fd do  -- on screen score
-							mem:write_u8(_add, 64)
-						end
 						for _add = 0x4e80, 0x4e82 do  -- score in memory
 							mem:write_u8(_add, 0)
+						end
+						for _add = 0x43f7, 0x43fd do  -- on screen score
+							mem:write_u8(_add, 64)
 						end
 					end
 				else
@@ -119,14 +120,61 @@ function continue.startplugin()
 		end
 	end
 
-	function dkong()
+	function galax_driver()
+		--and moon cresta?
+		one_player_game = mem:read_u8(0x400e) == 0
+		game_mode = mem:read_u8(0x400a)
+		starting_lives = 2 + mem:read_u8(0x401f)  -- read dip switch
+		lives_lost = mem:read_u8(0x4201) == 1 and mem:read_u8(0x421d) == 0 and mem:read_u8(0x4205) == 10
+		reset_continue = mem:read_u8(0x4200) == 1
+		show_tally = mem:read_u8(0x4006)
+		reset_tally = game_mode == 1 or tally == nil
+
+		if one_player_game then
+			if reset_tally then
+				tally = 0
+			end
+			if reset_continue then
+				frame_stop = nil
+			end
+			if lives_lost and not frame_stop then
+				frame_stop = scr:frame_number() + 600
+			end
+			if frame_stop and frame_stop > scr:frame_number() then
+				mem:write_u8(0x4205, 10)   -- freeze by seting the animation sprite
+				frame_remain = frame_stop - scr:frame_number()
+				draw_continue_box(frame_remain, true, message_table_double)
+
+				if mem:read_u8(0x6800) == 1 then  -- P1 button pushed
+					tally = tally + 1
+					mem:write_u8(0x421d, starting_lives)
+					frame_stop = nil
+
+					--reset score
+					for _add = 0x40a2, 0x40a4 do  -- score in memory
+						mem:write_u8(_add, 0)
+					end
+					for _add = 0x52e1, 0x53a1, 0x20 do -- on screen score
+						mem:write_u8(_add, 16)
+					end
+					mem:write_u8(0x5301, 0)  -- rightmost zeros on screen
+					mem:write_u8(0x52e1, 0)  -- rightmost zeros on screen
+				end
+			end
+			if show_tally then
+				draw_tally(tally, true)
+			end
+		end
+	end
+
+	function dk_driver()
 		one_player_game = mem:read_u8(0x600f) == 0
 		game_mode = mem:read_u8(0x600a)
+		starting_lives = mem:read_u8(0x6020)
+		lives_lost = game_mode == 13 and mem:read_u8(0x6228) == 1 and mem:read_u8(0x639d) == 2
 		reset_continue = game_mode == 11
 		reset_tally = game_mode == 7 or tally == nil
 		show_tally = game_mode >= 8 and game_mode <= 16
-		starting_lives = mem:read_u8(0x6020)
-		lives_lost = game_mode == 13 and mem:read_u8(0x6228) == 1 and mem:read_u8(0x639d) == 2
 
 		if one_player_game then
 			if reset_tally then
@@ -147,12 +195,11 @@ function continue.startplugin()
 					tally = tally + 1
 					mem:write_u8(0x6228, starting_lives + 1)
 					frame_stop = nil
-
 					--reset score
-					for k, v in pairs({0x7781, 0x7761, 0x7741, 0x7721, 0x7701, 0x76e1}) do --on screen score
-						mem:write_u8(v, 0)
-					end
 					for _add = 0x60b2, 0x60b4 do  -- score in memory
+						mem:write_u8(_add, 0)
+					end
+					for _add = 0x76e1, 0x7781, 0x20 do  -- on screen score
 						mem:write_u8(_add, 0)
 					end
 				end
@@ -183,6 +230,11 @@ function continue.startplugin()
 				print("WARNING: The continue plugin does not support this rom.")
 			end
 		end
+		-- Create a double height message table
+		for k, v in ipairs(message_table) do
+			table.insert(message_table_double, v)
+			table.insert(message_table_double, v)
+		end
 	end
 
 	function main()
@@ -206,9 +258,9 @@ function continue.startplugin()
 		end
 	end
 
-	function draw_continue_box(remain, flip)
+	function draw_continue_box(remain, flip, table)
 		local _flip = flip or false
-		local _tab = message_table
+		local _tab = table or message_table
 		local _cnt, _col
 		if _flip then
 			_tab = flip_table(_tab)
