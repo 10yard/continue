@@ -20,15 +20,16 @@ local continue = exports
 
 function continue.startplugin()
 	local mac, scr, cpu, mem
-	local frame_stop, frame_remain
-	local tally
+	local frame, frame_stop, frame_remain
+	local mode, start_lives, tally
+	local b_1p_game, b_game_restart, b_almost_gameover, b_reset_continue, b_reset_tally, b_show_tally
 
 	-- colours used by continue plugin
 	local BLACK = 0xff000000
 	local WHITE = 0xffffffff
 	local RED = 0xffff0000
-	local CYAN = 0xff14f3ff
 	local YELLOW = 0xfff8f91a
+	local CYAN = 0xff14f3ff
 
 	-- compatible roms with associated function and position data
 	local rom_function
@@ -48,11 +49,11 @@ function continue.startplugin()
 	rom_table["dkonghrd"] = {"dkong_driver", 219, 9}
 	rom_table["dkongf"] = {"dkong_driver", 219, 9}
 	rom_table["dkongj"] = {"dkong_driver", 219, 9}
-	rom_table["asteroid"] = {"asteroid_driver", 10, 10, WHITE} -- WIP
+	rom_table["asteroid"] = {"asteroid_driver", 10, 10, WHITE}
 	--rom_table["jrpacman"] = {"pacman_driver", 18, 216, WHITE} -- issue with restart/pill count
 
 	-- message to be displayed in continue box
-	local message_table = {
+	local continue_message = {
 		"######  ##   ##  ####   ##   ##         ######     ##            ####    ######   ###   ######   ######",
 		"##   ## ##   ## ##  ##  ##   ##         ##   ##   ###           ##  ##     ##    ## ##  ##   ##    ##  ",
 		"##   ## ##   ## ##      ##   ##         ##   ##    ##           ##         ##   ##   ## ##   ##    ##  ",
@@ -69,91 +70,42 @@ function continue.startplugin()
 		"           ##   ##   ##          ##  ## ##   ## ##  ###    ##      ##   ##  ### ##   ## ##             ",
 		"           ##    #####            ####   #####  ##   ##    ##    ###### ##   ##  #####  #######        "
 		}
-	local message_table_triple = {}
+	local continue_message_x2, continue_message_x3
 
+	---------------------------------------------------------------------------
 	-- GAME/ROM SPECIFIC FUNCTIONS
-	------------------------------
-
-	function asteroid_driver()
-		--defines
-		game_mode = mem:read_u8(0x21b)
-		one_player_game = mem:read_u8(0x1c) == 1
-		starting_lives = mem:read_u8(0x56)
-		reset_continue = game_mode == 255
-		reset_tally = not one_player_game or tally == nil
-		show_tally = one_player_game
-		lives_lost = game_mode == 160 and mem:read_u8(0x57) == 0      --immediately before game over
-
-		--logic
-		if one_player_game then
-			if reset_tally then
-				tally = 0
-			end
-			if reset_continue then
-				frame_stop = nil
-			end
-			if lives_lost and not frame_stop then
-				frame_stop = scr:frame_number() + 600
-			end
-			if frame_stop and frame_stop > scr:frame_number() then
-				mem:write_u8(0x21b, 160)   -- freeze by setting the game mode counter
-				frame_remain = frame_stop - scr:frame_number()
-
-				--TODO: Fix this hack to display message
-				draw_continue_box(frame_remain, true, {})
-				scr:draw_text(0, 80,  "PRESS P1 TO")
-				scr:draw_text(0, 100, " CONTINUE")
-
-				if mem:read_u8(0x2403) == 128 then  -- P1 button pushed
-					tally = tally + 1
-					mem:write_u8(0x57, starting_lives)
-					frame_stop = nil
-
-					--reset score
-					mem:write_u8(0x52, 0)
-					mem:write_u8(0x53, 0)
-				end
-			end
-			if show_tally then
-				draw_tally(tally)
-			end
-		end
-	end
-
+	---------------------------------------------------------------------------
 	function pacman_driver()
-		-- defines
-		one_player_game = mem:read_u8(0x4e70) == 0
-		game_mode = mem:read_u8(0x4e00)
-		game_restart = mem:read_u8(0x4e04) == 2
-		starting_lives = mem:read_u8(0x4e6f)
-		lives_lost = game_mode == 3 and mem:read_u8(0x4e14) == 0 and mem:read_u8(0x4e04) == 6
-		reset_continue = mem:read_u8(0x4e03) == 3
-		reset_tally = game_mode == 2 or tally == nil
-		show_tally = game_mode == 3
+		-- Standard data
+		mode = read(0x4e00)
+		start_lives = read(0x4e6f)
+		b_1p_game = read(0x4e70, 0)
+		b_game_restart = read(0x4e04, 2)
+		b_almost_gameover = mode == 3 and read(0x4e14, 0) and read(0x4e04,6)
+		b_reset_continue = read(0x4e03, 3)
+		b_reset_tally = mode == 2 or tally == nil
+		b_show_tally = mode == 3
 
-		-- logic
-		if one_player_game then
-			if reset_tally then
-				tally = 0
-			end
-			if reset_continue then
-				frame_stop = nil
-			end
-			if lives_lost and not frame_stop then
-				frame_stop = scr:frame_number() + 600
-				pills_eaten = mem:read_u8(0x4e0e)
+		-- Logic
+		if b_1p_game then
+			if b_reset_tally then tally = 0 end
+			if b_reset_continue then frame_stop = nil end
+
+			if b_almost_gameover and not frame_stop then
+				frame_stop = frame + 600
+				pills_eaten = read(0x4e0e)
 			end
 			if frame_stop then
-				if scr:frame_number() < frame_stop then
+				if frame < frame_stop then
 					mem:write_u8(0x4e04, 2)  -- freeze game
-					frame_remain = frame_stop - scr:frame_number()
+					frame_remain = frame_stop - frame
 					draw_continue_box(frame_remain, true)
 
-					if to_bits(mem:read_u8(0x5040))[6] == 0 then  -- P1 button pushed
+					if to_bits(read(0x5040))[6] == 0 then  -- P1 button pushed
 						tally = tally + 1
 						mem:write_u8(0x4e04, 0)  -- unfreeze game
-						mem:write_u8(0x4e14, starting_lives)  --update number of lives
-						mem:write_u8(0x4e15, starting_lives - 1)  --update displayed number of lives
+						mem:write_u8(0x4e14, start_lives)  --update number of lives
+						mem:write_u8(0x4e15, start_lives - 1)  --update displayed number of lives
 						frame_stop = nil
 
 						-- reset score in memory
@@ -179,47 +131,44 @@ function continue.startplugin()
 					mem:write_u8(0x4e04, 6)  -- unfreeze game
 				end
 			end
-			if game_restart then
+			if b_game_restart then
 				mem:write_u8(0x4e0e, pills_eaten)  -- restore the number of pills eaten after continue
 			end
-			if show_tally then
+			if b_show_tally then
 				draw_tally(tally, true)
 			end
 		end
 	end
 
 	function galaxian_driver()
-		-- defines
-		one_player_game = mem:read_u8(0x400e) == 0
-		game_mode = mem:read_u8(0x400a)
-		lives_lost = mem:read_u8(0x4201) == 1 and mem:read_u8(0x421d) == 0 and mem:read_u8(0x4205) == 10
-		reset_continue = mem:read_u8(0x4200) == 1
-		show_tally = mem:read_u8(0x4006)
-		reset_tally = game_mode == 1 or tally == nil
-		starting_lives = 2 + mem:read_u8(0x401f) -- read dip switch
+		-- Standard data
+		mode = read(0x400a)
+		start_lives = 2 + read(0x401f) -- read dip switch
 		if emu:romname() == "moonaln" then
-			starting_lives = 3 + (mem:read_u8(0x401f) * 2) -- read dip switch
+			start_lives = 3 + (read(0x401f) * 2) -- read dip switch
 		end
+		b_1p_game = read(0x400e, 0)
+		b_almost_gameover = read(0x4201, 1) and read(0x421d, 0) and read(0x4205, 10)
+		b_reset_continue = read(0x4200, 1)
+		b_show_tally = read(0x4006)
+		b_reset_tally = mode == 1 or tally == nil
 
-		--logic
-		if one_player_game then
-			if reset_tally then
-				tally = 0
-			end
-			if reset_continue then
-				frame_stop = nil
-			end
-			if lives_lost and not frame_stop then
-				frame_stop = scr:frame_number() + 600
-			end
-			if frame_stop and frame_stop > scr:frame_number() then
-				mem:write_u8(0x4205, 0x10)   -- freeze by setting the animation counter
-				frame_remain = frame_stop - scr:frame_number()
-				draw_continue_box(frame_remain, true, message_table_triple)
+		-- Logic
+		if b_1p_game then
+			if b_reset_tally then tally = 0 end
+			if b_reset_continue then frame_stop = nil end
 
-				if mem:read_u8(0x6800) == 1 then  -- P1 button pushed
+			if b_almost_gameover and not frame_stop then
+				frame_stop = frame + 600
+			end
+			if frame_stop and frame_stop > frame then
+				mem:write_u8(0x4205, 0x10) -- freeze by setting the animation counter
+				frame_remain = frame_stop - frame
+				draw_continue_box(frame_remain, true, continue_message_x3)
+
+				if read(0x6800, 1) then -- P1 button pushed
 					tally = tally + 1
-					mem:write_u8(0x421d, starting_lives)
+					mem:write_u8(0x421d, start_lives)
 					frame_stop = nil
 
 					--reset score
@@ -233,41 +182,38 @@ function continue.startplugin()
 					mem:write_u8(0x52e1, 0)  -- rightmost zeros on screen
 				end
 			end
-			if show_tally then
+			if b_show_tally then
 				draw_tally(tally, true)
 			end
 		end
 	end
 
 	function dkong_driver()
-		-- defines
-		one_player_game = mem:read_u8(0x600f) == 0
-		game_mode = mem:read_u8(0x600a)
-		starting_lives = mem:read_u8(0x6020)
-		lives_lost = game_mode == 13 and mem:read_u8(0x6228) == 1 and mem:read_u8(0x639d) == 2
-		reset_continue = game_mode == 11
-		reset_tally = game_mode == 7 or tally == nil
-		show_tally = game_mode >= 8 and game_mode <= 16
+		-- Standard data
+		mode = read(0x600a)
+		start_lives = read(0x6020)
+		b_1p_game = read(0x600f, 0)
+		b_almost_gameover = mode == 13 and read(0x6228, 1) and read(0x639d, 2)
+		b_reset_continue = mode == 11
+		b_reset_tally = mode == 7 or tally == nil
+		b_show_tally = mode >= 8 and mode <= 16
 
-		--logic
-		if one_player_game then
-			if reset_tally then
-				tally = 0
+		-- Logic
+		if b_1p_game then
+			if b_reset_tally then tally = 0 end
+			if b_reset_continue then frame_stop = nil end
+
+			if b_almost_gameover and not frame_stop then
+				frame_stop = frame + 600
 			end
-			if reset_continue then
-				frame_stop = nil
-			end
-			if lives_lost and not frame_stop then
-				frame_stop = scr:frame_number() + 600
-			end
-			if frame_stop and frame_stop > scr:frame_number() then
+			if frame_stop and frame_stop > frame then
 				mem:write_u8(0x6009, 8) -- freeze game
-				frame_remain = frame_stop - scr:frame_number()
+				frame_remain = frame_stop - frame
 				draw_continue_box(frame_remain)
 
-				if to_bits(mem:read_u8(0x7d00))[3] == 1 then  -- P1 button pushed
+				if to_bits(read(0x7d00))[3] == 1 then  -- P1 button pushed
 					tally = tally + 1
-					mem:write_u8(0x6228, starting_lives + 1)
+					mem:write_u8(0x6228, start_lives + 1)
 					frame_stop = nil
 					--reset score
 					for _add = 0x60b2, 0x60b4 do  -- score in memory
@@ -278,15 +224,60 @@ function continue.startplugin()
 					end
 				end
 			end
-			if show_tally then
+			if b_show_tally then
 				draw_tally(tally)
 			end
 		end
 	end
 
-	-- PLUGIN FUNCTIONS
-	-------------------
+	function asteroid_driver()
+		-- Standard data
+		mode = read(0x21b)
+		start_lives = read(0x56)
+		b_1p_game = read(0x1c, 1)
+		b_reset_continue = mode == 255
+		b_reset_tally = not b_1p_game or tally == nil
+		b_show_tally = b_1p_game
+		b_almost_gameover = mode == 160 and read(0x57, 0) --immediately before game over
 
+		-- Logic
+		if b_1p_game then
+			if b_reset_tally then tally = 0 end
+			if b_reset_continue then frame_stop = nil end
+
+			if b_almost_gameover and not frame_stop then
+				frame_stop = frame + 600
+			end
+			if frame_stop and frame_stop > frame then
+				mem:write_u8(0x21b, 160)   -- freeze by setting the game mode counter
+				frame_remain = frame_stop - frame
+
+				--TODO: Fix this hack to display continue graphic
+				draw_continue_box(frame_remain, true, {})
+				scr:draw_text(15, 50,  "PUSH")
+				scr:draw_text(15, 80,  "P1 START")
+				scr:draw_text(15, 110, "TO")
+				scr:draw_text(15, 140, "CONTINUE")
+
+				if read(0x2403, 128) then -- P1 button pushed
+					tally = tally + 1
+					mem:write_u8(0x57, start_lives)
+					frame_stop = nil
+
+					--reset score
+					mem:write_u8(0x52, 0)
+					mem:write_u8(0x53, 0)
+				end
+			end
+			if b_show_tally then
+				draw_tally(tally)
+			end
+		end
+	end
+
+	---------------------------------------------------------------------------
+	-- PLUGIN FUNCTIONS
+	---------------------------------------------------------------------------
 	function initialize()
 		if tonumber(emu.app_version()) >= 0.227 then
 			mac = manager.machine
@@ -304,18 +295,14 @@ function continue.startplugin()
 			else
 				print("WARNING: The continue plugin does not support this rom.")
 			end
-
-			-- Create a triple height message table
-			for _, v in ipairs(message_table) do
-				for _=1, 3 do
-					table.insert(message_table_triple, v)
-				end
-			end
+			continue_message_x2 = stretch_table(continue_message, 2)
+			continue_message_x3 = stretch_table(continue_message, 3)
 		end
 	end
 
 	function main()
 		if rom_function ~= nil then
+			frame = scr:frame_number()
 			rom_function()
 		end
 	end
@@ -335,7 +322,7 @@ function continue.startplugin()
 
 	function draw_continue_box(remain, flip, table)
 		local _flip = flip or false
-		local _tab = table or message_table
+		local _tab = table or continue_message
 		local _cnt, _col
 		if _flip  then
 			_tab = flip_table(_tab)
@@ -355,6 +342,7 @@ function continue.startplugin()
 	end
 
 	function draw_tally(n, flip)
+		-- chalk up the number of continues
 		local _flip = flip or false
 		local cycle_table = { WHITE, CYAN }
 		for i=0, n - 1 do
@@ -368,7 +356,19 @@ function continue.startplugin()
 		end
 	end
 
+	function stretch_table(t, factor)
+		-- Increase height of table by given factor integer
+		_table = {}
+		for _, v in ipairs(t) do
+			for _=1, factor do
+				table.insert(_table, v)
+			end
+		end
+		return _table
+	end
+
 	function flip_table(t)
+		-- reverse table content
 		local flipped_table = {}
 		local item_count = #t
 		for k, v in ipairs(t) do
@@ -386,6 +386,16 @@ function continue.startplugin()
 			num=(num-rest)/2
 		end
 		return t
+	end
+
+	function read(address, comparison)
+		-- return data from memory address or boolean when the comparison value is provided
+		data = mem:read_u8(address)
+		if comparison then
+			return data == comparison
+		else
+			return data
+		end
 	end
 
 	emu.register_start(function()

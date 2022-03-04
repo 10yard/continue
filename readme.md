@@ -7,17 +7,18 @@ A tally of the number of continues appears at top of screen.
 
 The plugin currently supports:
 
-  Pac-Man
-  Ms. Pac-Man
-  Ms. Pac-Attack
-  Pac-Man Plus
-  Galaxian
-  Super Galaxian
-  Moon Alien
-  Donkey Kong
-  Donkey Kong Junior
-  Donkey Kong II (Jumpman Returns)
-  Asteroids* (Work in progress)
+-  Pac-Man
+-  Ms. Pac-Man
+-  Ms. Pac-Attack
+-  Pac-Man Plus
+-  Galaxian
+-  Super Galaxian
+-  Moon Alien
+-  Donkey Kong
+-  Donkey Kong Junior
+-  Donkey Kong II (Jumpman Returns)
+-  Asteroids
+
 
 Tested with latest MAME version 0.241
 
@@ -30,7 +31,7 @@ The Plugin is installed by copying the "continue" folder into your MAME plugins 
 
 The Plugin is run by adding `-plugin continue` to your MAME arguments e.g.
 
-``` mame mspacman -plugin continue```  
+```mame mspacman -plugin continue```  
 
 
 ## Feedback
