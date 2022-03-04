@@ -28,24 +28,28 @@ function continue.startplugin()
 	local WHITE = 0xffffffff
 	local RED = 0xffff0000
 	local CYAN = 0xff14f3ff
+	local YELLOW = 0xfff8f91a
 
 	-- compatible roms with associated function and position data
 	local rom_function
 	local rom_table = {}
-	rom_table["galaxian"] = {"galax_driver", 52, 216}
-	rom_table["pacman"] = {"pac_driver", 18, 216}
-	rom_table["mspacman"] = {"pac_driver", 18, 216}
-	rom_table["mspacmat"] = {"pac_driver", 18, 216}
-	rom_table["pacplus"] = {"pac_driver", 18, 216}
-	rom_table["dkong"] = {"dk_driver", 219, 9}
-	rom_table["dkongjr"] = {"dk_driver", 229, 154}
-	rom_table["dkongx"] = {"dk_driver", 219, 9}
-	rom_table["dkongx11"] = {"dk_driver", 219, 9}
-	rom_table["dkongpe"] = {"dk_driver", 219, 9}
-	rom_table["dkonghrd"] = {"dk_driver", 219, 9}
-	rom_table["dkongf"] = {"dk_driver", 219, 9}
-	rom_table["dkongj"] = {"dk_driver", 219, 9}
-	--rom_table["jrpacman"] = {"pac_driver", 18, 216} -- score needs to be blanked on reset
+	rom_table["galaxian"] = {"galaxian_driver", 52, 216, WHITE}
+	rom_table["superg"] = {"galaxian_driver", 52, 216, WHITE}
+	rom_table["moonaln"] = {"galaxian_driver", 52, 216, WHITE}
+	rom_table["pacman"] = {"pacman_driver", 18, 216, WHITE}
+	rom_table["mspacman"] = {"pacman_driver", 18, 216, WHITE}
+	rom_table["mspacmat"] = {"pacman_driver", 18, 216, WHITE}
+	rom_table["pacplus"] = {"pacman_driver", 18, 216, WHITE}
+	rom_table["dkong"] = {"dkong_driver", 219, 9}
+	rom_table["dkongjr"] = {"dkong_driver", 229, 154, YELLOW}
+	rom_table["dkongx"] = {"dkong_driver", 219, 9}
+	rom_table["dkongx11"] = {"dkong_driver", 219, 9}
+	rom_table["dkongpe"] = {"dkong_driver", 219, 9}
+	rom_table["dkonghrd"] = {"dkong_driver", 219, 9}
+	rom_table["dkongf"] = {"dkong_driver", 219, 9}
+	rom_table["dkongj"] = {"dkong_driver", 219, 9}
+	rom_table["asteroid"] = {"asteroid_driver", 10, 10, WHITE} -- WIP
+	--rom_table["jrpacman"] = {"pacman_driver", 18, 216, WHITE} -- issue with restart/pill count
 
 	-- message to be displayed in continue box
 	local message_table = {
@@ -65,20 +69,22 @@ function continue.startplugin()
 		"           ##   ##   ##          ##  ## ##   ## ##  ###    ##      ##   ##  ### ##   ## ##             ",
 		"           ##    #####            ####   #####  ##   ##    ##    ###### ##   ##  #####  #######        "
 		}
-	local message_table_double = {}
+	local message_table_triple = {}
 
 	-- GAME/ROM SPECIFIC FUNCTIONS
 	------------------------------
 
-	function pac_driver()
-		one_player_game = mem:read_u8(0x4e70) == 0
-		game_mode = mem:read_u8(0x4e00)
-		starting_lives = mem:read_u8(0x4e6f)
-		lives_lost = game_mode == 3 and mem:read_u8(0x4e14) == 0 and mem:read_u8(0x4e04) == 6
-		reset_continue = mem:read_u8(0x4e03) == 3
-		reset_tally = game_mode == 2 or tally == nil
-		show_tally = game_mode == 3
+	function asteroid_driver()
+		--defines
+		game_mode = mem:read_u8(0x21b)
+		one_player_game = mem:read_u8(0x1c) == 1
+		starting_lives = mem:read_u8(0x56)
+		reset_continue = game_mode == 255
+		reset_tally = not one_player_game or tally == nil
+		show_tally = one_player_game
+		lives_lost = game_mode == 160 and mem:read_u8(0x57) == 0      --immediately before game over
 
+		--logic
 		if one_player_game then
 			if reset_tally then
 				tally = 0
@@ -88,6 +94,54 @@ function continue.startplugin()
 			end
 			if lives_lost and not frame_stop then
 				frame_stop = scr:frame_number() + 600
+			end
+			if frame_stop and frame_stop > scr:frame_number() then
+				mem:write_u8(0x21b, 160)   -- freeze by setting the game mode counter
+				frame_remain = frame_stop - scr:frame_number()
+
+				--TODO: Fix this hack to display message
+				draw_continue_box(frame_remain, true, {})
+				scr:draw_text(0, 80,  "PRESS P1 TO")
+				scr:draw_text(0, 100, " CONTINUE")
+
+				if mem:read_u8(0x2403) == 128 then  -- P1 button pushed
+					tally = tally + 1
+					mem:write_u8(0x57, starting_lives)
+					frame_stop = nil
+
+					--reset score
+					mem:write_u8(0x52, 0)
+					mem:write_u8(0x53, 0)
+				end
+			end
+			if show_tally then
+				draw_tally(tally)
+			end
+		end
+	end
+
+	function pacman_driver()
+		-- defines
+		one_player_game = mem:read_u8(0x4e70) == 0
+		game_mode = mem:read_u8(0x4e00)
+		game_restart = mem:read_u8(0x4e04) == 2
+		starting_lives = mem:read_u8(0x4e6f)
+		lives_lost = game_mode == 3 and mem:read_u8(0x4e14) == 0 and mem:read_u8(0x4e04) == 6
+		reset_continue = mem:read_u8(0x4e03) == 3
+		reset_tally = game_mode == 2 or tally == nil
+		show_tally = game_mode == 3
+
+		-- logic
+		if one_player_game then
+			if reset_tally then
+				tally = 0
+			end
+			if reset_continue then
+				frame_stop = nil
+			end
+			if lives_lost and not frame_stop then
+				frame_stop = scr:frame_number() + 600
+				pills_eaten = mem:read_u8(0x4e0e)
 			end
 			if frame_stop then
 				if scr:frame_number() < frame_stop then
@@ -101,12 +155,23 @@ function continue.startplugin()
 						mem:write_u8(0x4e14, starting_lives)  --update number of lives
 						mem:write_u8(0x4e15, starting_lives - 1)  --update displayed number of lives
 						frame_stop = nil
-						--reset score
-						for _add = 0x4e80, 0x4e82 do  -- score in memory
-							mem:write_u8(_add, 0)
+
+						-- reset score in memory
+						for _addr = 0x4e80, 0x4e82 do
+							mem:write_u8(_addr, 0)
 						end
-						for _add = 0x43f7, 0x43fd do  -- on screen score
-							mem:write_u8(_add, 64)
+
+						--reset score on screen
+						_addr = 0x43f7
+						if emu:romname() == "jrpacman" then
+							_addr = 0x4777
+						end
+						for _i=0, 7 do
+							if _i < 2 then
+								mem:write_u8(_addr + _i, 0)
+							else
+								mem:write_u8(_addr + _i, 64)
+							end
 						end
 					end
 				else
@@ -114,22 +179,29 @@ function continue.startplugin()
 					mem:write_u8(0x4e04, 6)  -- unfreeze game
 				end
 			end
+			if game_restart then
+				mem:write_u8(0x4e0e, pills_eaten)  -- restore the number of pills eaten after continue
+			end
 			if show_tally then
 				draw_tally(tally, true)
 			end
 		end
 	end
 
-	function galax_driver()
-		--and moon cresta?
+	function galaxian_driver()
+		-- defines
 		one_player_game = mem:read_u8(0x400e) == 0
 		game_mode = mem:read_u8(0x400a)
-		starting_lives = 2 + mem:read_u8(0x401f)  -- read dip switch
 		lives_lost = mem:read_u8(0x4201) == 1 and mem:read_u8(0x421d) == 0 and mem:read_u8(0x4205) == 10
 		reset_continue = mem:read_u8(0x4200) == 1
 		show_tally = mem:read_u8(0x4006)
 		reset_tally = game_mode == 1 or tally == nil
+		starting_lives = 2 + mem:read_u8(0x401f) -- read dip switch
+		if emu:romname() == "moonaln" then
+			starting_lives = 3 + (mem:read_u8(0x401f) * 2) -- read dip switch
+		end
 
+		--logic
 		if one_player_game then
 			if reset_tally then
 				tally = 0
@@ -141,9 +213,9 @@ function continue.startplugin()
 				frame_stop = scr:frame_number() + 600
 			end
 			if frame_stop and frame_stop > scr:frame_number() then
-				mem:write_u8(0x4205, 10)   -- freeze by seting the animation sprite
+				mem:write_u8(0x4205, 0x10)   -- freeze by setting the animation counter
 				frame_remain = frame_stop - scr:frame_number()
-				draw_continue_box(frame_remain, true, message_table_double)
+				draw_continue_box(frame_remain, true, message_table_triple)
 
 				if mem:read_u8(0x6800) == 1 then  -- P1 button pushed
 					tally = tally + 1
@@ -167,7 +239,8 @@ function continue.startplugin()
 		end
 	end
 
-	function dk_driver()
+	function dkong_driver()
+		-- defines
 		one_player_game = mem:read_u8(0x600f) == 0
 		game_mode = mem:read_u8(0x600a)
 		starting_lives = mem:read_u8(0x6020)
@@ -176,6 +249,7 @@ function continue.startplugin()
 		reset_tally = game_mode == 7 or tally == nil
 		show_tally = game_mode >= 8 and game_mode <= 16
 
+		--logic
 		if one_player_game then
 			if reset_tally then
 				tally = 0
@@ -226,33 +300,34 @@ function continue.startplugin()
 				scr = mac.screens[":screen"]
 				cpu = mac.devices[":maincpu"]
 				mem = cpu.spaces["program"]
+				rom_function = _G[rom_table[emu:romname()][1]]
 			else
 				print("WARNING: The continue plugin does not support this rom.")
 			end
-		end
-		-- Create a double height message table
-		for k, v in ipairs(message_table) do
-			table.insert(message_table_double, v)
-			table.insert(message_table_double, v)
+
+			-- Create a triple height message table
+			for _, v in ipairs(message_table) do
+				for _=1, 3 do
+					table.insert(message_table_triple, v)
+				end
+			end
 		end
 	end
 
 	function main()
-		if cpu ~= nil then
-			if not rom_function then
-				rom_function = _G[rom_table[emu:romname()][1]]
-			end
+		if rom_function ~= nil then
 			rom_function()
 		end
 	end
 
 	function draw_graphic(data, pos_y, pos_x)
-		local _col
+		local _pixel, _col
+		_col = rom_table[emu:romname()][4] or CYAN
 		for _y, line in pairs(data) do
 			for _x=1, string.len(line) do
-				_col = string.sub(line, _x, _x)
-				if _col ~= " " then
-					scr:draw_box(pos_y -_y, pos_x + _x, pos_y -_y + 1, pos_x +_x + 1, CYAN, CYAN)
+				_pixel = string.sub(line, _x, _x)
+				if _pixel ~= " " then
+					scr:draw_box(pos_y -_y, pos_x + _x, pos_y -_y + 1, pos_x +_x + 1, _col, _col)
 				end
 			end
 		end
@@ -262,13 +337,13 @@ function continue.startplugin()
 		local _flip = flip or false
 		local _tab = table or message_table
 		local _cnt, _col
-		if _flip then
+		if _flip  then
 			_tab = flip_table(_tab)
 		end
 		scr:draw_box(96, 49, 144, 168, BLACK, BLACK)
 		draw_graphic(_tab, 120, 57)
 		_cnt = math.floor(remain / 6)
-		_col = CYAN
+		_col = rom_table[emu:romname()][4] or CYAN
 		if _cnt < 40 and _cnt % 6 >= 3 then
 			_col = RED
 		end

@@ -12,9 +12,12 @@ The plugin currently supports:
   Ms. Pac-Attack
   Pac-Man Plus
   Galaxian
+  Super Galaxian
+  Moon Alien
   Donkey Kong
   Donkey Kong Junior
   Donkey Kong II (Jumpman Returns)
+  Asteroids* (Work in progress)
 
 Tested with latest MAME version 0.241
 
