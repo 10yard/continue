@@ -24,7 +24,7 @@ function continue.startplugin()
 	local mode, start_lives, tally
 	local b_1p_game, b_game_restart, b_almost_gameover, b_reset_continue, b_reset_tally, b_show_tally
 
-	-- colours used by continue plugin
+	-- colours
 	local BLACK = 0xff000000
 	local WHITE = 0xffffffff
 	local RED = 0xffff0000
@@ -33,43 +33,37 @@ function continue.startplugin()
 
 	-- compatible roms with associated function and position data
 	local rom_function
-	local rom_table, rom_data = {}, {}
-	--         rom name       function         x    y  color   flip
-	rom_table["galaxian"] = {"galaxian_func", 52, 216, WHITE,  true}
-	rom_table["superg"]   = {"galaxian_func", 52, 216, WHITE,  true}
-	rom_table["moonaln"]  = {"galaxian_func", 52, 216, WHITE,  true}
-	rom_table["pacman"]   = {"pacman_func",   18, 216, WHITE,  true}
-	rom_table["mspacman"] = {"pacman_func",   18, 216, WHITE,  true}
-	rom_table["mspacmat"] = {"pacman_func",   18, 216, WHITE,  true}
-	rom_table["pacplus"]  = {"pacman_func",   18, 216, WHITE,  true}
-	rom_table["dkong"]    = {"dkong_func",   219,   9, CYAN,   false}
-	rom_table["dkongjr"]  = {"dkong_func",   229, 154, YELLOW, false}
-	rom_table["dkongx"]   = {"dkong_func",   219,   9, CYAN,   false}
-	rom_table["dkongx11"] = {"dkong_func",   219,   9, CYAN,   false}
-	rom_table["dkongpe"]  = {"dkong_func",   219,   9, CYAN,   false}
-	rom_table["dkonghrd"] = {"dkong_func",   219,   9, CYAN,   false}
-	rom_table["dkongf"]   = {"dkong_func",   219,   9, CYAN,   false}
-	rom_table["dkongj"]   = {"dkong_func",   219,   9, CYAN,   false}
-	rom_table["asteroid"] = {"asteroid_func", 10, 10, WHITE,   false}
-	--rom_table["jrpacman"] = {"pacman_func", 18, 216, WHITE, true} -- issue with restart/pill count
+	local rom_data = {}
+	local rom_table = {}
 
-	-- message to be displayed in continue box
-	local prompt = {
-		"42  232  432328 423  283 43 4232#342342",
-		"232 232 2  2  2328 23232#832  23  23 2 2  2323 2  ",
-		"232 232 2332328 2323 28328 23232 2323 2  ",
-		"232 232  4#  42#8 2323 283 4#3  23232 2  2#3 2  ",
-		"42  232332 2328 423  28823 2342# 4#332  ",
-		"233232 232 2328 28 2832323 23232 2 2#3  2  ",
-		"233 4#34#  2328 233 428  4#3  23232 2  2#3 2  ",
-		"X3 ",
-		"8 42  4#83 434#  232  42  42 232 232 42#8",
-		"83232328  2  2 232 2#  23 233232#  2 232 283  ",
-		"83232328 233232 4 23 233234 2 232 283  ",
-		"83232328 233232 42#3 2332342# 232 428 ",
-		"83232328 233232 2 43 233232 4 232 283  ",
-		"83232328  2  2 232 2  2#3 233232  2# 232 283  ",
-		"8323 4#83 434#  2323 23 42 232  4#  42#8"}
+	-- supported rom name   function          tally yx   msg yx   color   flip   scale
+	rom_table["galaxian"] = {"galaxian_func", {52, 216}, {96,50}, WHITE,  true,  3}
+	rom_table["superg"]   = {"galaxian_func", {52, 216}, {96,50}, WHITE,  true,  3}
+	rom_table["moonaln"]  = {"galaxian_func", {52, 216}, {96,50}, WHITE,  true,  3}
+	rom_table["pacman"]   = {"pacman_func",   {18, 216}, {96,50}, WHITE,  true,  1}
+	rom_table["mspacman"] = {"pacman_func",   {18, 216}, {96,50}, WHITE,  true,  1}
+	rom_table["mspacmat"] = {"pacman_func",   {18, 216}, {96,50}, WHITE,  true,  1}
+	rom_table["pacplus"]  = {"pacman_func",   {18, 216}, {96,50}, WHITE,  true,  1}
+	rom_table["rallyx"]   = {"pacman_func",   {18, 216}, {96,50}, WHITE,  true,  1}
+	rom_table["dkong"]    = {"dkong_func",     {219, 9}, {96,50}, CYAN,   false, 1}
+	rom_table["dkongjr"]  = {"dkong_func",   {229, 154}, {96,50}, YELLOW, false, 1}
+	rom_table["dkongx"]   = {"dkong_func",     {219, 9}, {96,50}, CYAN,   false, 1}
+	rom_table["dkongx11"] = {"dkong_func",     {219, 9}, {96,50}, CYAN,   false, 1}
+	rom_table["dkongpe"]  = {"dkong_func",     {219, 9}, {96,50}, CYAN,   false, 1}
+	rom_table["dkonghrd"] = {"dkong_func",     {219, 9}, {96,50}, CYAN,   false, 1}
+	rom_table["dkongf"]   = {"dkong_func",     {219, 9}, {96,50}, CYAN,   false, 1}
+	rom_table["dkongj"]   = {"dkong_func",     {219, 9}, {96,50}, CYAN,   false, 1}
+	rom_table["asteroid"] = {"asteroid_func" , {10, 10}, {45,50}, WHITE,  true,  3}
+
+	local message_data = {
+		"6  2S2  4S2S2SSS6S  2SSSS4S 6S3S6S6", "2S2 2S2 2  2  2S2SSS2S2S3SSS  2  2S  2S 2 2  2S2S 2  ",
+		"2S2 2S2 2SS2S2SSS2S2S 2SSS  2SSS2S2S2 2S2S 2  ", "2S2 2S2  5  7SSS2S2S 2SSSS5S  2S2S2 2  3S 2  ",
+		"6  2S2SS2 2S2SSS6S  2SSSSS 2S 2S7 5SS2  ", "2SS2S2 2S2 2S2SSS2SSS2SSS  2S2S 2S2S2 2 3S  2  ",
+		"2SS 5S5  2S2SSS2SS 6SSS 5S  2S2S2 2  3S 2  ", "", "SSS6  5SSSS4S5  2S2  6  6 2S2 2S2 7SS  ",
+		"SSS  2S2S2SSS 2  2 2S2 3  2S 2SS2S3  2 2S2 2SSSS ", "SSS  2S2S2SSS2SS2S2 4 2S 2SS2S4 2 2S2 2SSSS ",
+		"SSS  2S2S2SSS2SS2S2 7S 2SS2S7 2S2 6SSS", "SSS  2S2S2SSS2SS2S2 2 4S 2SS2S2 4 2S2 2SSSS ",
+		"SSS  2S2S2SSS 2  2 2S2 2  3S 2SS2S2  3 2S2 2SSSS ", "SSS  2S 5SSSS4S5  2S2S 2S 6 2S2  5  7SS  "}
+	local message_data_flipped = {}
 
 	---------------------------------------------------------------------------
 	-- GAME/ROM SPECIFIC FUNCTIONS
@@ -150,7 +144,7 @@ function continue.startplugin()
 			end
 			if frame_stop and frame_stop > frame then
 				mem:write_u8(0x4205, 0x10) -- freeze by setting the animation counter
-				draw_continue_box(frame_stop - frame, true, prompts[3])
+				draw_continue_box(frame_stop - frame, true)
 
 				if read(0x6800, 1) then -- P1 button pushed
 					tally = tally + 1
@@ -224,7 +218,8 @@ function continue.startplugin()
 				mem:write_u8(0x21b, 160)   -- freeze by setting the game mode counter
 
 				--TODO: Fix this hack to display continue graphic
-				draw_continue_box(frame_stop - frame, true, {})
+				message_data, message_data_flipped = {}, {}
+				draw_continue_box(frame_stop - frame, true)
 				scr:draw_text(15, 50,  "PUSH")
 				scr:draw_text(15, 80,  "P1 START")
 				scr:draw_text(15, 110, "TO")
@@ -261,7 +256,7 @@ function continue.startplugin()
 				mem = cpu.spaces["program"]
 				rom_data = rom_table[emu:romname()]
 				rom_function = _G[rom_data[1]]
-				prompts = prepare_message(prompt)
+				message_data_flipped = flip_table(message_data)
 			else
 				print("WARNING: The continue plugin does not support this rom.")
 			end
@@ -283,107 +278,84 @@ function continue.startplugin()
 	end
 
 	function draw_graphic(data, pos_y, pos_x)
-		local _pixel, _col
-		_col = rom_data[4]
+		local _len, _sub = string.len, string.sub
+		local _pixel, _skip
+		local _col, _scale = rom_data[4], rom_data[6]
 		for _y, line in pairs(data) do
-			for _x=1, string.len(line) do
-				_pixel = string.sub(line, _x, _x)
-				if _pixel ~= " " then
-					scr:draw_box(pos_y -_y, pos_x + _x, pos_y -_y + 1, pos_x +_x + 1, _col, _col)
+			_x = 1
+			for _i=1, _len(line) do
+				_skip = 1
+				_pixel = _sub(line, _i, _i)
+				if _pixel == "S" then
+					_skip = 3 --skip multiple spaces
+				elseif _pixel ~= " " then
+					_skip = tonumber(_pixel)
+					scr:draw_box(pos_y -_y*_scale, pos_x+_x, pos_y-(_y*_scale) + _scale, pos_x+_x+_skip, _col, _col)
 				end
+				_x = _x + _skip
 			end
 		end
 	end
 
---	function draw_continue_box(remain, y, x)
---		local _y = y or 96
---		local _x = x or 49
---		local _w, _h = 120, 48
---	end
+	function draw_continue_box(remain)
+		local _y, _x, _scale = rom_data[3][1], rom_data[3][2], rom_data[6]
+		local _w, _h = 120, 48 * _scale
+		local _col = rom_data[4]
+		local _cnt
 
-
-	function draw_continue_box(remain, flip, table)
-		local _flip = flip or false
-		local _tab = table or prompts[1]
-		local _cnt, _col
-		if _flip  then
-			_tab = flip_table(_tab)
-		end
-		scr:draw_box(96, 49, 144, 168, BLACK, BLACK)
-		draw_graphic(_tab, 120, 57)
+		scr:draw_box(_y, _x, _y + _h, _x + _w, BLACK, BLACK) -- background
 		_cnt = math.floor(remain / 6)
-		_col = rom_data[4]
-		if _cnt < 40 and _cnt % 6 >= 3 then
-			_col = RED
-		end
-		if flip then
-			scr:draw_box(128, 162, 136, 162 - _cnt, _col, _col) -- draw countdown timer
+		if _cnt < 40 and _cnt % 6 >= 3 then _col = RED end
+		if rom_data[5] then
+			draw_graphic(message_data_flipped, _y + (24*_scale), _x + 7) -- wording
+			scr:draw_box(_y+(_scale*32), _x+112, _y+(_scale*40), _x+112-_cnt, _col, _col) -- flipped countdown bar
 		else
-			scr:draw_box(128, 57, 136, 57 + _cnt, _col, _col) -- draw countdown timer
+			draw_graphic(message_data, _y + (40*_scale), _x + 7) --wording
+			scr:draw_box(_y+(_scale*8), _x+8, _y+(_scale*16), _x+8+_cnt, _col, _col) -- countdown bar
 		end
 	end
 
-	function draw_tally(n, flip)
+	function draw_tally(n)
 		-- chalk up the number of continues
-		local _flip = rom_data[5]
-		local cycle_table = { WHITE, CYAN }
-		for i=0, n - 1 do
-			_col = cycle_table[((math.floor(i / 5)) % 2) + 1]
-			_y, _x = rom_data[2], rom_data[3]
-			if _flip then
-				scr:draw_box(_y, _x - (i * 4), _y + 3, _x + 2 - (i * 4), _col ,_col)
+		local _col, _y, _x
+		local _cols = { WHITE, CYAN }
+		for _i=0, n - 1 do
+			_col = _cols[((math.floor(_i / 5)) % 2) + 1]
+			_y, _x = rom_data[2][1], rom_data[2][2]
+			if rom_data[5] then
+				scr:draw_box(_y, _x - (_i * 4), _y + (3 * rom_data[6]), _x + 2 - (_i * 4), _col ,_col)
 			else
-				scr:draw_box(_y, _x + (i * 4), _y + 3, _x + 2 + (i * 4), _col ,_col)
+				scr:draw_box(_y, _x + (_i * 4), _y + (3 * rom_data[6]), _x + 2 + (_i * 4), _col ,_col)
 			end
 		end
-	end
-
-	function prepare_message(t)
-		local _sub = string.gsub
-		local _format = string.format
-		local _table, _table2, _table3 = {}, {}, {}
-		local _v
-		for _, v in ipairs(t) do
-			_v = _sub(v, "X", _format("%99s", " "))
-			_v = _sub(_sub(_v, "8", "        "), "3", "   ")
-			_v = _sub(_sub(_v, "4", "####"), "2", "##")
-			table.insert(_table, _v)
-		end
-		for _, v in ipairs(_table) do
-			for _=1, 2 do table.insert(_table2, v) end
-			for _=1, 3 do table.insert(_table3, v) end
-		end
-		return {_table, _table2, _table3}
 	end
 
 	function flip_table(t)
-		-- reverse table content
-		local flipped_table = {}
-		local item_count = #t
+		local _f = {}
 		for k, v in ipairs(t) do
-			flipped_table[item_count + 1 - k] = string.reverse(v)
+			_f[#t + 1 - k] = string.reverse(v)
 		end
-		return flipped_table
+		return _f
 	end
 
 	function to_bits(num)
 		--return a table of bits, least significant first
-		local t={}
+		local _t={}
 		while num>0 do
 			rest=math.fmod(num,2)
-			t[#t+1]=rest
+			_t[#_t+1]=rest
 			num=(num-rest)/2
 		end
-		return t
+		return _t
 	end
 
 	function read(address, comparison)
 		-- return data from memory address or boolean when the comparison value is provided
-		data = mem:read_u8(address)
+		_d = mem:read_u8(address)
 		if comparison then
-			return data == comparison
+			return _d == comparison
 		else
-			return data
+			return _d
 		end
 	end
 
