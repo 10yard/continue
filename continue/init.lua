@@ -52,7 +52,7 @@ function continue.startplugin()
 	rom_table["dkonghrd"] = {"dkong_func",     {219, 9}, {96,50}, CYAN,   false, 1}
 	rom_table["dkongf"]   = {"dkong_func",     {219, 9}, {96,50}, CYAN,   false, 1}
 	rom_table["dkongj"]   = {"dkong_func",     {219, 9}, {96,50}, CYAN,   false, 1}
-	rom_table["asteroid"] = {"asteroid_func" , {10, 10}, {45,50}, WHITE,  true,  3}
+	rom_table["asteroid"] = {"asteroid_func" , {10, 10}, {-96,50}, WHITE,  true,  3}
 
 	local message_data = {
 		"6  2S2  4S2S2SSS6S  2SSSS4S 6S3S6S6", "2S2 2S2 2  2  2S2SSS2S2S3SSS  2  2S  2S 2 2  2S2S 2  ",
@@ -86,7 +86,7 @@ function continue.startplugin()
 			if frame_stop then
 				if frame < frame_stop then
 					mem:write_u8(0x4e04, 2)  -- freeze game
-					draw_continue_box(frame_stop - frame, true)
+					draw_continue_box()
 
 					if to_bits(read(0x5040))[6] == 0 then  -- P1 button pushed
 						tally = tally + 1
@@ -143,7 +143,7 @@ function continue.startplugin()
 			end
 			if frame_stop and frame_stop > frame then
 				mem:write_u8(0x4205, 0x10) -- freeze by setting the animation counter
-				draw_continue_box(frame_stop - frame, true)
+				draw_continue_box()
 
 				if read(0x6800, 1) then -- P1 button pushed
 					tally = tally + 1
@@ -180,7 +180,7 @@ function continue.startplugin()
 			end
 			if frame_stop and frame_stop > frame then
 				mem:write_u8(0x6009, 8) -- freeze game
-				draw_continue_box( frame_stop - frame)
+				draw_continue_box()
 
 				if to_bits(read(0x7d00))[3] == 1 then  -- P1 button pushed
 					tally = tally + 1
@@ -216,13 +216,13 @@ function continue.startplugin()
 			if frame_stop and frame_stop > frame then
 				mem:write_u8(0x21b, 160)   -- freeze by setting the game mode counter
 
-				--TODO: Fix this hack to display continue graphic
+				--TODO: Fix this hack to continue box text
 				message_data, message_data_flipped = {}, {}
-				draw_continue_box(frame_stop - frame, true)
-				scr:draw_text(15, 50,  "PUSH")
-				scr:draw_text(15, 80,  "P1 START")
-				scr:draw_text(15, 110, "TO")
-				scr:draw_text(15, 140, "CONTINUE")
+				draw_continue_box()
+				scr:draw_text(40, 50,  "P U S H")
+				scr:draw_text(40, 80,  "P 1   S T A R T")
+				scr:draw_text(40, 110, "T O")
+				scr:draw_text(40, 140, "C O N T I N U E")
 
 				if read(0x2403, 128) then -- P1 button pushed
 					tally = tally + 1
@@ -296,14 +296,14 @@ function continue.startplugin()
 		end
 	end
 
-	function draw_continue_box(remain)
+	function draw_continue_box()
 		local _y, _x, _scale = rom_data[3][1], rom_data[3][2], rom_data[6]
 		local _w, _h = 120, 48 * _scale
 		local _col = rom_data[4]
 		local _cnt
 
 		scr:draw_box(_y, _x, _y + _h, _x + _w, BLACK, BLACK) -- background
-		_cnt = math.floor(remain / 6)
+		_cnt = math.floor((frame_stop - frame) / 6)
 		if _cnt < 40 and _cnt % 6 >= 3 then _col = RED end
 		if rom_data[5] then
 			draw_graphic(message_data_flipped, _y + (24*_scale), _x + 7) -- wording
