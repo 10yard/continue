@@ -44,7 +44,6 @@ function continue.startplugin()
 	rom_table["mspacman"] = {"pacman_func",   {18, 216}, {96,50}, WHITE,  true,  1}
 	rom_table["mspacmat"] = {"pacman_func",   {18, 216}, {96,50}, WHITE,  true,  1}
 	rom_table["pacplus"]  = {"pacman_func",   {18, 216}, {96,50}, WHITE,  true,  1}
-	rom_table["rallyx"]   = {"pacman_func",   {18, 216}, {96,50}, WHITE,  true,  1}
 	rom_table["dkong"]    = {"dkong_func",     {219, 9}, {96,50}, CYAN,   false, 1}
 	rom_table["dkongjr"]  = {"dkong_func",   {229, 154}, {96,50}, YELLOW, false, 1}
 	rom_table["dkongx"]   = {"dkong_func",     {219, 9}, {96,50}, CYAN,   false, 1}
