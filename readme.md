@@ -1,5 +1,4 @@
 # **Continue Plugin for MAME** #
-by Jon Wilson (10yard)
 
 A continue option appears before your game is over with a 10 second countdown timer.
 
