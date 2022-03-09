@@ -22,7 +22,7 @@ local continue = exports
 function continue.startplugin()
 	local mac, scr, cpu, mem
 	local frame, frame_stop, mode, start_lives, tally
-	local b_1p_game, b_game_restart, b_almost_gameover, b_reset_continue, b_reset_tally, b_show_tally
+	local b_1p_game, b_game_restart, b_almost_gameover, b_reset_continue, b_reset_tally, b_show_tally, b_push_p1
 
 	-- colours
 	local BLACK = 0xff000000
@@ -36,13 +36,13 @@ function continue.startplugin()
 	local rom_function
 
 	-- supported rom name   function          tally yx   msg yx    color   flip   rotate  scale
-	rom_table["galaxian"] = {"galaxian_func", {52, 216}, {96,52},  WHITE,  true,  false,  3}
-	rom_table["superg"]   = {"galaxian_func", {52, 216}, {96,52},  WHITE,  true,  false,  3}
-	rom_table["moonaln"]  = {"galaxian_func", {52, 216}, {96,52},  WHITE,  true,  false,  3}
-	rom_table["pacman"]   = {"pacman_func",   {18, 216}, {96,50},  WHITE,  true,  false,  1}
-	rom_table["mspacman"] = {"pacman_func",   {18, 216}, {96,50},  WHITE,  true,  false,  1}
-	rom_table["mspacmat"] = {"pacman_func",   {18, 216}, {96,50},  WHITE,  true,  false,  1}
-	rom_table["pacplus"]  = {"pacman_func",   {18, 216}, {96,50},  WHITE,  true,  false,  1}
+	rom_table["galaxian"] = {"galaxian_func", {52, 216}, {328,52}, WHITE,  true,  false,  3}
+	rom_table["superg"]   = {"galaxian_func", {52, 216}, {328,52}, WHITE,  true,  false,  3}
+	rom_table["moonaln"]  = {"galaxian_func", {52, 216}, {328,52}, WHITE,  true,  false,  3}
+	rom_table["pacman"]   = {"pacman_func",   {18, 216}, {120,50}, WHITE,  true,  false,  1}
+	rom_table["mspacman"] = {"pacman_func",   {18, 216}, {120,50}, WHITE,  true,  false,  1}
+	rom_table["mspacmat"] = {"pacman_func",   {18, 216}, {120,50}, WHITE,  true,  false,  1}
+	rom_table["pacplus"]  = {"pacman_func",   {18, 216}, {120,50}, WHITE,  true,  false,  1}
 	rom_table["dkong"]    = {"dkong_func",     {219, 9}, {96,50},  CYAN,   false, false,  1}
 	rom_table["dkongjr"]  = {"dkong_func",   {229, 154}, {96,50},  YELLOW, false, false,  1}
 	rom_table["dkongx"]   = {"dkong_func",     {219, 9}, {96,50},  CYAN,   false, false,  1}
@@ -52,7 +52,7 @@ function continue.startplugin()
 	rom_table["dkongf"]   = {"dkong_func",     {219, 9}, {96,50},  CYAN,   false, false,  1}
 	rom_table["dkongj"]   = {"dkong_func",     {219, 9}, {96,50},  CYAN,   false, false,  1}
 	rom_table["asteroid"] = {"asteroid_func" , {8, 8}, {540,240}, WHITE,   false, true,   3}
-	rom_table["cclimber"] = {"cclimber_func",  {9,48}, {156,80},  WHITE,   true,  true,   1}
+	rom_table["cclimber"] = {"cclimber_func",  {9,48}, {156,80},   CYAN,   true,  true,   1}
 
 	local message_data = {"6s2S2s4S2S2SSS6Ss2SSSS4S 6S3S6S6", "2S2 2S2 2s2s2S2SSS2S2S3SSSs2s2Ss2S 2 2s2S2S 2s",
 		"2S2 2S2 2SS2S2SSS2S2S 2SSSs2SSS2S2S2 2S2S 2s", "2S2 2S2s5s7SSS2S2S 2SSSS5Ss2S2S2 2s3S 2s",
@@ -96,6 +96,7 @@ function continue.startplugin()
 		b_reset_continue = read(0x4e03, 3)
 		b_reset_tally = mode == 2 or tally == nil
 		b_show_tally = mode == 3
+		b_push_p1 = frame_stop and to_bits(read(0x5040))[6] == 0
 
 		-- Logic
 		if b_1p_game then
@@ -108,19 +109,14 @@ function continue.startplugin()
 				if frame < frame_stop then
 					mem:write_u8(0x4e04, 4)  -- freeze game
 					draw_continue_box()
-
-					if to_bits(read(0x5040))[6] == 0 then  -- P1 button pushed
+					if b_push_p1 then
 						tally = tally + 1
 						mem:write_u8(0x4e04, 0)  -- unfreeze game
 						mem:write_u8(0x4e14, start_lives)  --update number of lives
 						mem:write_u8(0x4e15, start_lives - 1)  --update displayed number of lives
 						frame_stop = nil
 
-						-- reset score in memory
-						for _addr = 0x4e80, 0x4e82 do
-							mem:write_u8(_addr, 0)
-						end
-
+						for _addr = 0x4e80, 0x4e82 do mem:write_u8(_addr, 0) end  -- reset score in memory
 						--reset score on screen
 						for _i=0, 7 do
 							if _i < 2 then _v = 0 else _v = 64 end
@@ -151,6 +147,7 @@ function continue.startplugin()
 		b_reset_continue = read(0x4200, 1)
 		b_show_tally = read(0x4006)
 		b_reset_tally = mode == 1 or tally == nil
+		b_push_p1 = frame_stop and read(0x6800, 1)
 
 		-- Logic
 		if b_1p_game then
@@ -158,21 +155,15 @@ function continue.startplugin()
 				frame_stop = frame + 600
 			end
 			if frame_stop and frame_stop > frame then
-				mem:write_u8(0x4205, 0x10) -- freeze by setting the animation counter
+				mem:write_u8(0x4205, 0x10)  -- freeze by setting the animation counter
 				draw_continue_box()
-
-				if read(0x6800, 1) then -- P1 button pushed
+				if b_push_p1 then
 					tally = tally + 1
 					mem:write_u8(0x421d, start_lives)
 					frame_stop = nil
 
-					--reset score
-					for _add = 0x40a2, 0x40a4 do  -- score in memory
-						mem:write_u8(_add, 0)
-					end
-					for _add = 0x52e1, 0x53a1, 0x20 do -- on screen score
-						mem:write_u8(_add, 16)
-					end
+					for _add = 0x40a2, 0x40a4 do  mem:write_u8(_add, 0) end  -- reset score in memory
+					for _add = 0x52e1, 0x53a1, 0x20 do mem:write_u8(_add, 16) end  -- reset onscreen score
 					mem:write_u8(0x5301, 0)  -- rightmost zeros on screen
 					mem:write_u8(0x52e1, 0)  -- rightmost zeros on screen
 				end
@@ -190,6 +181,7 @@ function continue.startplugin()
 		b_reset_continue = mode == 11
 		b_reset_tally = mode == 7 or tally == nil
 		b_show_tally = mode >= 8 and mode <= 16
+		b_push_p1 = frame_stop and to_bits(read(0x7d00))[3] == 1
 
 		-- Logic
 		if b_1p_game then
@@ -200,17 +192,12 @@ function continue.startplugin()
 				mem:write_u8(0x6009, 8) -- freeze game
 				draw_continue_box()
 
-				if to_bits(read(0x7d00))[3] == 1 then  -- P1 button pushed
+				if b_push_p1 then
 					tally = tally + 1
 					mem:write_u8(0x6228, start_lives + 1)
 					frame_stop = nil
-					--reset score
-					for _add = 0x60b2, 0x60b4 do  -- score in memory
-						mem:write_u8(_add, 0)
-					end
-					for _add = 0x76e1, 0x7781, 0x20 do  -- on screen score
-						mem:write_u8(_add, 0)
-					end
+					for _add = 0x60b2, 0x60b4 do  mem:write_u8(_add, 0) end  -- reset score in memory
+					for _add = 0x76e1, 0x7781, 0x20 do  mem:write_u8(_add, 0) end  -- reset score on screen
 				end
 			end
 		end
@@ -226,6 +213,7 @@ function continue.startplugin()
 		b_reset_tally = not b_1p_game or tally == nil
 		b_show_tally = b_1p_game
 		b_almost_gameover = mode == 160 and read(0x57, 0)
+		b_push_p1 = frame_stop and read(0x2403, 128)
 
 		-- Logic
 		if b_1p_game then
@@ -238,13 +226,13 @@ function continue.startplugin()
 				message_data = flip_table(message_data_r2)
 				scr:draw_box(348, 248, 660, 280, BLACK, BLACK) -- blackout the GAME OVER text
 				draw_continue_box()
-				if read(0x2403, 128) then -- P1 button pushed
+				if b_push_p1 then
 					mem:write_u8(0x21b, 200) -- skip some of the explosion animation
 					tally = tally + 1
 					mem:write_u8(0x57, start_lives)
 					frame_stop = nil
 
-					--reset score
+					--reset score in memory
 					mem:write_u8(0x52, 0)
 					mem:write_u8(0x53, 0)
 				end
@@ -262,6 +250,7 @@ function continue.startplugin()
 		b_reset_continue = mode == 0 or read(0x80d8) > 0
 		b_show_tally = mode == 1
 		b_reset_tally = mode == 0 or tally == nil
+		b_push_p1 = frame_stop and to_bits(read(0xb800))[3] == 1
 
 		if b_1p_game then
 			if b_almost_gameover and not frame_stop then
@@ -273,7 +262,7 @@ function continue.startplugin()
 					cpu.state["L"].value = 255
 					scr:draw_box(0, 224, 256, 80, BLACK, BLACK) -- black background
 					draw_continue_box()
-					if to_bits(read(0xb800))[3] == 1 then
+					if b_push_p1 then
 						mem:write_u8(0x80d8, start_lives + 1)
 						mem:write_u8(0x8073, 1)
 						frame_stop = nil
@@ -372,11 +361,7 @@ function continue.startplugin()
 
 	function draw_continue_box()
 		local _y, _x, _scale = rom_data[3][1], rom_data[3][2], rom_data[7]
-		if rom_data[6] then
-			--scr:draw_box(_y-88, _x, _y+32, _x+(48*_scale), BLACK, BLACK) -- rotated background
-		else
-			scr:draw_box(_y, _x, _y+(48*_scale), _x+120, BLACK, BLACK) -- background
-		end
+		scr:draw_box(_y, _x, _y+(48*_scale), _x+120, BLACK, BLACK) -- black background
 		if rom_data[5] then
 			draw_graphic(message_data, _y+(24*_scale), _x+7) -- flipped graphics
 		else

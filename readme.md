@@ -5,20 +5,23 @@ A continue option appears before your game is over with a 10 second countdown ti
 Push P1-Start button to continue your game and your score will be reset.
 A tally of the number of continues appears at the top of screen.
 
+
+![Continue Plugin Screenshot](https://i.imgur.com/YR4wikO.png)
+
+
 The plugin currently supports:
 
 -  Pac-Man
--  Ms. Pac-Man
--  Ms. Pac-Attack
 -  Pac-Man Plus
+-  Ms. Pac-Man
 -  Galaxian
 -  Super Galaxian
 -  Moon Alien
+-  Asteroids
+-  Crazy Climber
 -  Donkey Kong
 -  Donkey Kong Junior
 -  Donkey Kong II (Jumpman Returns)
--  Asteroids
--  Crazy Climber
 
 
 Tested with latest MAME version 0.241
