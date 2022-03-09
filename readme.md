@@ -2,7 +2,9 @@
 by Jon Wilson (10yard)
 
 A continue option appears before your game is over with a 10 second countdown timer.
-Push P1-Start button to continue your game and your score will be reset.
+
+Push the *P1 Start* button to continue your game and your score will be reset.
+
 A tally of the number of continues appears at the top of screen.
 
 
@@ -17,11 +19,11 @@ The plugin currently supports:
 -  Galaxian
 -  Super Galaxian
 -  Moon Alien
--  Asteroids
--  Crazy Climber
 -  Donkey Kong
 -  Donkey Kong Junior
 -  Donkey Kong II (Jumpman Returns)
+-  Asteroids
+-  Crazy Climber
 
 
 Tested with latest MAME version 0.241
