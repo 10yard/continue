@@ -20,22 +20,20 @@ exports.author = { name = "Jon Wilson (10yard)" }
 local continue = exports
 
 function continue.startplugin()
+	-- mame system objects
 	local mac, scr, cpu, mem
+
+	-- general use variables
 	local h_mode, h_start_lives
 	local i_frame, i_frame_stop, i_tally
 	local b_1p_game, b_game_restart, b_almost_gameover, b_reset_continue, b_reset_tally, b_show_tally, b_push_p1
 
 	-- colours
-	local BLACK = 0xff000000
-	local WHITE = 0xffffffff
-	local RED = 0xffff0000
-	local YELLOW = 0xfff8f91a
-	local CYAN = 0xff14f3ff
+	local BLACK, WHITE, YELLOW, RED, CYAN = 0xff000000, 0xffffffff, 0xffff0000, 0xfff8f91a, 0xff14f3ff
 
 	-- compatible roms with associated function and position data
 	local rom_data, rom_table = {}, {}
 	local rom_function
-
 	-- supported rom name   function          tally yx   msg yx    color   flip   rotate  scale
 	rom_table["galaxian"] = {"galaxian_func", {52, 216}, {328,52}, WHITE,  true,  false,  3}
 	rom_table["superg"]   = {"galaxian_func", {52, 216}, {328,52}, WHITE,  true,  false,  3}
@@ -55,6 +53,7 @@ function continue.startplugin()
 	rom_table["asteroid"] = {"asteroid_func" , {8, 8}, {540,240}, WHITE,   false, true,   3}
 	rom_table["cclimber"] = {"cclimber_func",  {9,48}, {156,80},   CYAN,   true,  true,   1}
 
+	-- encoded message data
 	local message_data = {"6s2S2s4S2S2SSS6Ss2SSSS4S 6S3S6S6", "2S2 2S2 2s2s2S2SSS2S2S3SSSs2s2Ss2S 2 2s2S2S 2s",
 		"2S2 2S2 2SS2S2SSS2S2S 2SSSs2SSS2S2S2 2S2S 2s", "2S2 2S2s5s7SSS2S2S 2SSSS5Ss2S2S2 2s3S 2s",
 		"6s2S2SS2 2S2SSS6Ss2SSSSS 2S 2S7 5SS2s", "2SS2S2 2S2 2S2SSS2SSS2SSSs2S2S 2S2S2 2 3Ss2s",
@@ -84,7 +83,7 @@ function continue.startplugin()
 		"$SS 95","$SS 95","$$$ 11","$$$ 11"};
 
 	---------------------------------------------------------------------------
-	-- GAME/ROM SPECIFIC FUNCTIONS
+	-- Game specific functions
 	---------------------------------------------------------------------------
 	function pacman_func()
 		-- ROM disassembly at:
@@ -106,26 +105,22 @@ function continue.startplugin()
 				_pills_eaten = read(0x4e0e)
 				_level = read(0x4e13)
 			end
-			if i_frame_stop then
-				if i_frame < i_frame_stop then
-					mem:write_u8(0x4e04, 4)  -- freeze game
-					draw_continue_box()
-					if b_push_p1 then
-						i_tally = i_tally + 1
-						mem:write_u8(0x4e04, 0)  -- unfreeze game
-						mem:write_u8(0x4e14, h_start_lives)  --update number of lives
-						mem:write_u8(0x4e15, h_start_lives - 1)  --update displayed number of lives
-						i_frame_stop = nil
-
-						for _addr = 0x4e80, 0x4e82 do mem:write_u8(_addr, 0) end  -- reset score in memory
-						--reset score on screen
-						for _i=0, 7 do
-							if _i < 2 then _v = 0 else _v = 64 end
-							mem:write_u8(0x43f7 + _i, _v)
-						end
-					end
-				else
+			if i_frame_stop and i_frame_stop > i_frame then
+				mem:write_u8(0x4e04, 4)  -- freeze game
+				draw_continue_box()
+				if b_push_p1 then
+					i_tally = i_tally + 1
+					mem:write_u8(0x4e04, 0)  -- unfreeze game
+					mem:write_u8(0x4e14, h_start_lives)  --update number of lives
+					mem:write_u8(0x4e15, h_start_lives - 1)  --update displayed number of lives
 					i_frame_stop = nil
+
+					for _addr = 0x4e80, 0x4e82 do mem:write_u8(_addr, 0) end  -- reset score in memory
+					--reset score on screen
+					for _i=0, 7 do
+						if _i < 2 then _v = 0 else _v = 64 end
+						mem:write_u8(0x43f7 + _i, _v)
+					end
 				end
 			end
 			if b_game_restart then
@@ -257,30 +252,28 @@ function continue.startplugin()
 			if b_almost_gameover and not i_frame_stop then
 				i_frame_stop = i_frame + 600
 			end
-			if i_frame_stop then
-				if i_frame < i_frame_stop then
-					cpu.state["H"].value = 255  -- force delay timer to keep running
-					cpu.state["L"].value = 255
-					scr:draw_box(0, 224, 256, 80, BLACK, BLACK) -- black background
-					draw_continue_box()
-					if b_push_p1 then
-						mem:write_u8(0x80d8, h_start_lives + 1)
-						mem:write_u8(0x8073, 1)
-						i_frame_stop = nil
-						i_tally = i_tally + 1
+			if i_frame_stop and i_frame_stop > i_frame then
+				cpu.state["H"].value = 255  -- force delay timer to keep running
+				cpu.state["L"].value = 255
+				scr:draw_box(0, 224, 256, 80, BLACK, BLACK) -- black background
+				draw_continue_box()
+				if b_push_p1 then
+					mem:write_u8(0x80d8, h_start_lives + 1)
+					mem:write_u8(0x8073, 1)
+					i_frame_stop = nil
+					i_tally = i_tally + 1
 
-						-- reset score in memory
-						mem:write_u8(0x80d9, 0)
-						mem:write_u8(0x80da, 0)
-						mem:write_u8(0x80db, 0)
-					end
+					-- reset score in memory
+					mem:write_u8(0x80d9, 0)
+					mem:write_u8(0x80da, 0)
+					mem:write_u8(0x80db, 0)
 				end
 			end
 		end
 	end
 
 	---------------------------------------------------------------------------
-	-- PLUGIN FUNCTIONS
+	-- Plugin functions
 	---------------------------------------------------------------------------
 	function initialize()
 		if tonumber(emu.app_version()) >= 0.227 then
