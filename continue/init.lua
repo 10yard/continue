@@ -29,7 +29,7 @@ function continue.startplugin()
 	local b_1p_game, b_game_restart, b_almost_gameover, b_reset_continue, b_reset_tally, b_show_tally, b_push_p1
 
 	-- colours
-	local BLACK, WHITE, YELLOW, RED, CYAN = 0xff000000, 0xffffffff, 0xffff0000, 0xfff8f91a, 0xff14f3ff
+	local BLACK, WHITE, RED, YELLOW, CYAN = 0xff000000, 0xffffffff, 0xffff0000, 0xfff8f91a, 0xff14f3ff
 
 	-- compatible roms with associated function and position data
 	local rom_data, rom_table = {}, {}
