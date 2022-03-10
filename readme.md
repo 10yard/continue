@@ -1,28 +1,32 @@
 # **Continue Plugin for MAME** #
 
-A continue option appears before your game is over with a 10 second countdown timer.
+This plugin adds a continue feature to some classic arcade games. 
 
-Push the *P1 Start* button to continue your game and your score will be reset.
+The continue option will appear before your game is over with a 10 second countdown timer.  Simply push the *P1 Start* button to continue your game and your score will be reset.
 
-A tally of the number of continues appears at the top of screen.
+A tally of the number of continues made will appear at the top of the screen.
 
 
 ![Continue Plugin Screenshot](https://i.imgur.com/YR4wikO.png)
 
 
-The plugin currently supports:
+The plugin currently supports these games:
 
--  Pac-Man
--  Pac-Man Plus
--  Ms. Pac-Man
--  Galaxian
--  Super Galaxian
--  Moon Alien
--  Donkey Kong
--  Donkey Kong Junior
--  Donkey Kong II (Jumpman Returns)
--  Asteroids
--  Crazy Climber
+- Pac-Man
+- Ms. Pac-Man
+- Galaxians
+- Donkey Kong
+- Donkey Kong Junior
+- Asteroids
+- Crazy Climber
+
+Other variants of these games are also supported (including):
+- Pac-Man Plus
+- Ms. Pac-Man Attack
+- Super Galaxians
+- Moon Alien
+- DK II Jumpman Returns 
+- DK Remix Editions
 
 
 Tested with latest MAME version 0.241
@@ -55,6 +59,13 @@ nmikstas for Asteroids ROM disassembly resources at:
 
 Rich McFerron for Crazy Climber ROM disassembly resources at
 - https://computerarcheology.com/Arcade/CrazyClimber/
+
+
+## What's next
+
+I would like to add support for other classic games: Galaga, Space Invaders, Dig Dug, Defender and other Pac-Man variants (Super Pac-Man, Jr. Pac-Man).
+
+Let me know if you have any requests.  It greatly helps when there is a rom disassembly available.
 
 
 ## Feedback
