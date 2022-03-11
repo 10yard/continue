@@ -1,8 +1,8 @@
 {
 "plugin": {
 "name": "continue",
-"description": "Continue Plugin for MAME",
-"version": "0.1",
+"description": "Continue plugin",
+"version": "0.11",
 "author": "Jon Wilson (10yard)",
 "type": "plugin",
 "start": "false"

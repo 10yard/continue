@@ -7,13 +7,14 @@ The continue option will appear before your game is over with a 10 second countd
 A tally of the number of continues made will appear at the top of the screen.
 
 
-![Continue Plugin Screenshot](https://i.imgur.com/YR4wikO.png)
+![Continue Plugin Screenshot](https://i.imgur.com/b15LIZB.png)
 
 
 The plugin currently supports these games:
 
 - Pac-Man
 - Ms. Pac-Man
+- Galaga
 - Galaxians
 - Donkey Kong
 - Donkey Kong Junior
@@ -59,6 +60,9 @@ nmikstas for Asteroids ROM disassembly resources at:
 
 Rich McFerron for Crazy Climber ROM disassembly resources at
 - https://computerarcheology.com/Arcade/CrazyClimber/
+
+hackbar and neiderm for Galaga ROM disassembly resources at
+- https://github.com/hackbar/galaga
 
 
 ## What's next

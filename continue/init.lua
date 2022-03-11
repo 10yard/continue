@@ -13,8 +13,8 @@
 -----------------------------------------------------------------------------------------
 local exports = {}
 exports.name = "continue"
-exports.version = "0.1"
-exports.description = "Continue Plugin"
+exports.version = "0.11"
+exports.description = "Continue plugin"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
 local continue = exports
@@ -35,7 +35,7 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local rom_function
 	-- supported rom name   function          tally yx   msg yx    color   flip   rotate  scale
-	rom_table["galaga"] =   {"galaga_func",   {15, 219}, {120,50}, WHITE,  true,  false,  1} -- work in progress
+	rom_table["galaga"] =   {"galaga_func",   {15, 219}, {102,50}, WHITE,  true,  false,  1}
 	rom_table["galaxian"] = {"galaxian_func", {52, 216}, {328,52}, WHITE,  true,  false,  3}
 	rom_table["superg"]   = {"galaxian_func", {52, 216}, {328,52}, WHITE,  true,  false,  3}
 	rom_table["moonaln"]  = {"galaxian_func", {52, 216}, {328,52}, WHITE,  true,  false,  3}
@@ -86,44 +86,6 @@ function continue.startplugin()
 	---------------------------------------------------------------------------
 	-- Game specific functions
 	---------------------------------------------------------------------------
-	function galaga_func()
-		-- ROM disassembly at:
-		-- https://github.com/hackbar/galaga
-		h_mode = read(0x9201) -- 0==GAME_ENDED, 1==ATTRACT_MODE, 2==READY_TO_PLAY_MODE, 3==PLAY_MODE
-		h_start_lives = read(0x9982) + 1 --refer file "mrw.s" ram2 0x9800 + offset
-		b_1p_game = read(0x99b3, 0)
-		b_almost_gameover = read(0x9820) == 0 and read(0x8863) == 2 -- no extra ships & explosion animation almost over
-		--b_reset_continue = read(0x9820) == 0 and read(0x9213) > 0 -- no extra ships & restart flag set
-		b_reset_tally = h_mode == 2 or i_tally == nil
-		b_show_tally = h_mode == 3
-		b_push_p1 = i_frame_stop and to_bits(ports[':IN1']:read())[3] == 0
-
-
-		if b_1p_game then
-			if b_almost_gameover and not i_frame_stop then
-				i_frame_stop = i_frame + 600
-			end
-			if i_frame_stop and i_frame_stop > i_frame then
-				mem:write_u8(0x92a0, 1)  -- freeze the timer (counts upward to 255)
-				draw_continue_box()
-
-				if b_push_p1 then
-					i_tally = i_tally + 1
-					mem:write_u8(0x9820, h_start_lives)
-					i_frame_stop = nil
-
-					-- TODO: reset score
-					mem:write_u8(0x83fe, 36)
-					mem:write_u8(0x83fd, 36)
-					mem:write_u8(0x83fc, 36)
-					mem:write_u8(0x83fb, 36)
-					mem:write_u8(0x83fa, 36)
-					mem:write_u8(0x83f9, 0)
-				end
-			end
-		end
-	end
-
 	function dkong_func()
 		-- ROM disassembly at:
 		-- https://github.com/furrykef/dkdasm/blob/master/dkong.asm
@@ -144,7 +106,6 @@ function continue.startplugin()
 			if i_frame_stop and i_frame_stop > i_frame then
 				mem:write_u8(0x6009, 8) -- freeze game
 				draw_continue_box()
-
 				if b_push_p1 then
 					i_tally = i_tally + 1
 					mem:write_u8(0x6228, h_start_lives + 1)
@@ -188,6 +149,43 @@ function continue.startplugin()
 					for _add = 0x52e1, 0x53a1, 0x20 do mem:write_u8(_add, 16) end  -- reset onscreen score
 					mem:write_u8(0x5301, 0)  -- rightmost zeros on screen
 					mem:write_u8(0x52e1, 0)  -- rightmost zeros on screen
+				end
+			end
+		end
+	end
+
+	function galaga_func()
+		-- ROM disassembly at:
+		-- https://github.com/hackbar/galaga
+		h_mode = read(0x9201) -- 0=game ended, 1=attract, 2=ready to start, 3=playing
+		h_start_lives = read(0x9982) + 1 --refer file "mrw.s" ram2 0x9800 + offset
+		b_1p_game = read(0x99b3, 0)
+		b_reset_tally = h_mode == 2 or i_tally == nil
+		b_show_tally = h_mode == 3
+		b_push_p1 = i_frame_stop and to_bits(ports[':IN1']:read())[3] == 0
+		--check video ram for "CAPT" (part of FIGHTER CAPTURED message)
+		_capt = read(0x81f1) == 0xc and read(0x81d1) == 0xa and read(0x81b1) == 0x19 and read(0x8191) == 0x1d
+		-- no more ships and (explosion animation almost done or fighter was captured)
+		b_reset_continue = h_mode ~= 3 or (not _capt and read(0x8863) == 2) -- not playing or explosion animation done
+		b_almost_gameover = read(0x9820) == 0 and (read(0x8863) == 3 or _capt)
+
+		if b_1p_game then
+			if b_almost_gameover and not i_frame_stop then
+				i_frame_stop = i_frame + 600
+			end
+			if i_frame_stop and i_frame_stop > i_frame then
+				if not _captured then
+					mem:write_u8(0x92a0, 1)  -- freeze the timer (counts upward to 255)
+				end
+				draw_continue_box()
+				if b_push_p1 then
+					i_tally = i_tally + 1
+					mem:write_u8(0x9820, h_start_lives)
+					i_frame_stop = nil
+
+					-- reset score in memory
+					mem:write_u8(0x83f9, 0)
+					for _add = 0x83fa, 0x83fe do mem:write_u8(_add, 36) end  -- reset score on screen
 				end
 			end
 		end
