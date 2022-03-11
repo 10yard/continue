@@ -35,6 +35,7 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local rom_function
 	-- supported rom name   function          tally yx   msg yx    color   flip   rotate  scale
+	rom_table["galaga"] =   {"galaga_func",   {15, 219}, {120,50}, WHITE,  true,  false,  1} -- work in progress
 	rom_table["galaxian"] = {"galaxian_func", {52, 216}, {328,52}, WHITE,  true,  false,  3}
 	rom_table["superg"]   = {"galaxian_func", {52, 216}, {328,52}, WHITE,  true,  false,  3}
 	rom_table["moonaln"]  = {"galaxian_func", {52, 216}, {328,52}, WHITE,  true,  false,  3}
@@ -85,6 +86,149 @@ function continue.startplugin()
 	---------------------------------------------------------------------------
 	-- Game specific functions
 	---------------------------------------------------------------------------
+	function galaga_func()
+		-- ROM disassembly at:
+		-- https://github.com/hackbar/galaga
+		h_mode = read(0x9201) -- 0==GAME_ENDED, 1==ATTRACT_MODE, 2==READY_TO_PLAY_MODE, 3==PLAY_MODE
+		h_start_lives = read(0x9982) + 1 --refer file "mrw.s" ram2 0x9800 + offset
+		b_1p_game = read(0x99b3, 0)
+		b_almost_gameover = read(0x9820) == 0 and read(0x8863) == 2 -- no extra ships & explosion animation almost over
+		--b_reset_continue = read(0x9820) == 0 and read(0x9213) > 0 -- no extra ships & restart flag set
+		b_reset_tally = h_mode == 2 or i_tally == nil
+		b_show_tally = h_mode == 3
+		b_push_p1 = i_frame_stop and to_bits(ports[':IN1']:read())[3] == 0
+
+
+		if b_1p_game then
+			if b_almost_gameover and not i_frame_stop then
+				i_frame_stop = i_frame + 600
+			end
+			if i_frame_stop and i_frame_stop > i_frame then
+				mem:write_u8(0x92a0, 1)  -- freeze the timer (counts upward to 255)
+				draw_continue_box()
+
+				if b_push_p1 then
+					i_tally = i_tally + 1
+					mem:write_u8(0x9820, h_start_lives)
+					i_frame_stop = nil
+
+					-- TODO: reset score
+					mem:write_u8(0x83fe, 36)
+					mem:write_u8(0x83fd, 36)
+					mem:write_u8(0x83fc, 36)
+					mem:write_u8(0x83fb, 36)
+					mem:write_u8(0x83fa, 36)
+					mem:write_u8(0x83f9, 0)
+				end
+			end
+		end
+	end
+
+	function dkong_func()
+		-- ROM disassembly at:
+		-- https://github.com/furrykef/dkdasm/blob/master/dkong.asm
+		h_mode = read(0x600a)
+		h_start_lives = read(0x6020)
+		b_1p_game = read(0x600f, 0)
+		b_almost_gameover = h_mode == 13 and read(0x6228, 1) and read(0x639d, 2)
+		b_reset_continue = h_mode == 11
+		b_reset_tally = h_mode == 7 or i_tally == nil
+		b_show_tally = h_mode >= 8 and h_mode <= 16
+		b_push_p1 = i_frame_stop and to_bits(read(0x7d00))[3] == 1
+
+		-- Logic
+		if b_1p_game then
+			if b_almost_gameover and not i_frame_stop then
+				i_frame_stop = i_frame + 600
+			end
+			if i_frame_stop and i_frame_stop > i_frame then
+				mem:write_u8(0x6009, 8) -- freeze game
+				draw_continue_box()
+
+				if b_push_p1 then
+					i_tally = i_tally + 1
+					mem:write_u8(0x6228, h_start_lives + 1)
+					i_frame_stop = nil
+					for _add = 0x60b2, 0x60b4 do  mem:write_u8(_add, 0) end  -- reset score in memory
+					for _add = 0x76e1, 0x7781, 0x20 do  mem:write_u8(_add, 0) end  -- reset score on screen
+				end
+			end
+		end
+	end
+
+	function galaxian_func()
+		-- ROM disassembly at:
+		-- http://seanriddle.com/galaxian.asm
+		h_mode = read(0x400a)
+		h_start_lives = 2 + read(0x401f) -- read dip switch
+		if emu:romname() == "moonaln" then
+			h_start_lives = 3 + (read(0x401f) * 2) -- read dip switch
+		end
+		b_1p_game = read(0x400e, 0)
+		b_almost_gameover = read(0x4201, 1) and read(0x421d, 0) and read(0x4205, 10)
+		b_reset_continue = read(0x4200, 1)
+		b_show_tally = read(0x4006)
+		b_reset_tally = h_mode == 1 or i_tally == nil
+		b_push_p1 = i_frame_stop and read(0x6800, 1)
+
+		-- Logic
+		if b_1p_game then
+			if b_almost_gameover and not i_frame_stop then
+				i_frame_stop = i_frame + 600
+			end
+			if i_frame_stop and i_frame_stop > i_frame then
+				mem:write_u8(0x4205, 0x10)  -- freeze by setting the animation counter
+				draw_continue_box()
+				if b_push_p1 then
+					i_tally = i_tally + 1
+					mem:write_u8(0x421d, h_start_lives)
+					i_frame_stop = nil
+
+					for _add = 0x40a2, 0x40a4 do  mem:write_u8(_add, 0) end  -- reset score in memory
+					for _add = 0x52e1, 0x53a1, 0x20 do mem:write_u8(_add, 16) end  -- reset onscreen score
+					mem:write_u8(0x5301, 0)  -- rightmost zeros on screen
+					mem:write_u8(0x52e1, 0)  -- rightmost zeros on screen
+				end
+			end
+		end
+	end
+
+	function cclimber_func()
+		-- ROM Disassembly at:
+		-- https://computerarcheology.com/Arcade/CrazyClimber/
+		h_mode = read(0x8075)
+		h_start_lives = read(0x807e)
+		b_1p_game = read(0x8080, 0)
+		b_almost_gameover = read(0x8073, 0) and read(0x80d8, 0)
+		b_reset_continue = h_mode == 0 or read(0x80d8) > 0
+		b_show_tally = h_mode == 1
+		b_reset_tally = h_mode == 0 or i_tally == nil
+		b_push_p1 = i_frame_stop and to_bits(read(0xb800))[3] == 1
+
+		if b_1p_game then
+			if b_almost_gameover and not i_frame_stop then
+				i_frame_stop = i_frame + 600
+			end
+			if i_frame_stop and i_frame_stop > i_frame then
+				cpu.state["H"].value = 255  -- force delay timer to keep running
+				cpu.state["L"].value = 255
+				scr:draw_box(0, 224, 256, 80, BLACK, BLACK) -- black background
+				draw_continue_box()
+				if b_push_p1 then
+					mem:write_u8(0x80d8, h_start_lives + 1)
+					mem:write_u8(0x8073, 1)
+					i_frame_stop = nil
+					i_tally = i_tally + 1
+
+					-- reset score in memory
+					mem:write_u8(0x80d9, 0)
+					mem:write_u8(0x80da, 0)
+					mem:write_u8(0x80db, 0)
+				end
+			end
+		end
+	end
+
 	function pacman_func()
 		-- ROM disassembly at:
 		-- https://github.com/BleuLlama/GameDocs/blob/master/disassemble/mspac.asm
@@ -130,75 +274,6 @@ function continue.startplugin()
 		end
 	end
 
-	function galaxian_func()
-		-- ROM disassembly at:
-		-- http://seanriddle.com/galaxian.asm
-		h_mode = read(0x400a)
-		h_start_lives = 2 + read(0x401f) -- read dip switch
-		if emu:romname() == "moonaln" then
-			h_start_lives = 3 + (read(0x401f) * 2) -- read dip switch
-		end
-		b_1p_game = read(0x400e, 0)
-		b_almost_gameover = read(0x4201, 1) and read(0x421d, 0) and read(0x4205, 10)
-		b_reset_continue = read(0x4200, 1)
-		b_show_tally = read(0x4006)
-		b_reset_tally = h_mode == 1 or i_tally == nil
-		b_push_p1 = i_frame_stop and read(0x6800, 1)
-
-		-- Logic
-		if b_1p_game then
-			if b_almost_gameover and not i_frame_stop then
-				i_frame_stop = i_frame + 600
-			end
-			if i_frame_stop and i_frame_stop > i_frame then
-				mem:write_u8(0x4205, 0x10)  -- freeze by setting the animation counter
-				draw_continue_box()
-				if b_push_p1 then
-					i_tally = i_tally + 1
-					mem:write_u8(0x421d, h_start_lives)
-					i_frame_stop = nil
-
-					for _add = 0x40a2, 0x40a4 do  mem:write_u8(_add, 0) end  -- reset score in memory
-					for _add = 0x52e1, 0x53a1, 0x20 do mem:write_u8(_add, 16) end  -- reset onscreen score
-					mem:write_u8(0x5301, 0)  -- rightmost zeros on screen
-					mem:write_u8(0x52e1, 0)  -- rightmost zeros on screen
-				end
-			end
-		end
-	end
-
-	function dkong_func()
-		-- ROM disassembly at:
-		-- https://github.com/furrykef/dkdasm/blob/master/dkong.asm
-		h_mode = read(0x600a)
-		h_start_lives = read(0x6020)
-		b_1p_game = read(0x600f, 0)
-		b_almost_gameover = h_mode == 13 and read(0x6228, 1) and read(0x639d, 2)
-		b_reset_continue = h_mode == 11
-		b_reset_tally = h_mode == 7 or i_tally == nil
-		b_show_tally = h_mode >= 8 and h_mode <= 16
-		b_push_p1 = i_frame_stop and to_bits(read(0x7d00))[3] == 1
-
-		-- Logic
-		if b_1p_game then
-			if b_almost_gameover and not i_frame_stop then
-				i_frame_stop = i_frame + 600
-			end
-			if i_frame_stop and i_frame_stop > i_frame then
-				mem:write_u8(0x6009, 8) -- freeze game
-				draw_continue_box()
-
-				if b_push_p1 then
-					i_tally = i_tally + 1
-					mem:write_u8(0x6228, h_start_lives + 1)
-					i_frame_stop = nil
-					for _add = 0x60b2, 0x60b4 do  mem:write_u8(_add, 0) end  -- reset score in memory
-					for _add = 0x76e1, 0x7781, 0x20 do  mem:write_u8(_add, 0) end  -- reset score on screen
-				end
-			end
-		end
-	end
-
 	function asteroid_func()
 		-- Rom disassembly at:
 		-- https://github.com/nmikstas/asteroids-disassembly/tree/master/AsteroidsSource
@@ -236,50 +311,16 @@ function continue.startplugin()
 		end
 	end
 
-	function cclimber_func()
-		-- ROM Disassembly at:
-		-- https://computerarcheology.com/Arcade/CrazyClimber/
-		h_mode = read(0x8075)
-		h_start_lives = read(0x807e)
-		b_1p_game = read(0x8080, 0)
-		b_almost_gameover = read(0x8073, 0) and read(0x80d8, 0)
-		b_reset_continue = h_mode == 0 or read(0x80d8) > 0
-		b_show_tally = h_mode == 1
-		b_reset_tally = h_mode == 0 or i_tally == nil
-		b_push_p1 = i_frame_stop and to_bits(read(0xb800))[3] == 1
-
-		if b_1p_game then
-			if b_almost_gameover and not i_frame_stop then
-				i_frame_stop = i_frame + 600
-			end
-			if i_frame_stop and i_frame_stop > i_frame then
-				cpu.state["H"].value = 255  -- force delay timer to keep running
-				cpu.state["L"].value = 255
-				scr:draw_box(0, 224, 256, 80, BLACK, BLACK) -- black background
-				draw_continue_box()
-				if b_push_p1 then
-					mem:write_u8(0x80d8, h_start_lives + 1)
-					mem:write_u8(0x8073, 1)
-					i_frame_stop = nil
-					i_tally = i_tally + 1
-
-					-- reset score in memory
-					mem:write_u8(0x80d9, 0)
-					mem:write_u8(0x80da, 0)
-					mem:write_u8(0x80db, 0)
-				end
-			end
-		end
-	end
-
 	---------------------------------------------------------------------------
 	-- Plugin functions
 	---------------------------------------------------------------------------
 	function initialize()
 		if tonumber(emu.app_version()) >= 0.227 then
 			mac = manager.machine
+			ports = mac.ioport.ports
 		elseif tonumber(emu.app_version()) >= 0.196 then
 			mac = manager:machine()
+			ports = mac:ioport().ports
 		else
 			print("ERROR: The continue plugin requires MAME version 0.196 or greater.")
 		end
@@ -288,7 +329,6 @@ function continue.startplugin()
 				scr = mac.screens[":screen"]
 				cpu = mac.devices[":maincpu"]
 				mem = cpu.spaces["program"]
-				vid = mac.video
 				rom_data = rom_table[emu:romname()]
 				rom_function = _G[rom_data[1]]
 				if rom_data[6] then
