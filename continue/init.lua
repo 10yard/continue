@@ -34,30 +34,31 @@ function continue.startplugin()
 	-- compatible roms with associated function and position data
 	local rom_data, rom_table = {}, {}
 	local rom_function
-	-- supported rom name   function           tally yx   msg yx     col  flip   rotate scale
-	rom_table["invaders"] = { "invaders_func", {237,009}, {102,050}, GRN, false, false, 1}  -- work in progress
-	rom_table["galaga"]   = { "galaga_func",   {016,219}, {102,050}, WHT, true,  false, 1}
-	rom_table["galagamf"] = { "galaga_func",   {016,219}, {102,050}, WHT, true,  false, 1}
-	rom_table["galagamk"] = { "galaga_func",   {016,219}, {102,050}, WHT, true,  false, 1}
-	rom_table["galaxian"] = { "galaxian_func", {052,216}, {328,052}, WHT, true,  false, 3}
-	rom_table["superg"]   = { "galaxian_func", {052,216}, {328,052}, WHT, true,  false, 3}
-	rom_table["moonaln"]  = { "galaxian_func", {052,216}, {328,052}, WHT, true,  false, 3}
-	rom_table["pacman"]   = { "pacman_func",   {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["pacmanf"]  = { "pacman_func",   {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["mspacman"] = { "pacman_func",   {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["mspacmnf"] = { "pacman_func",   {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["mspacmat"] = { "pacman_func",   {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["pacplus"]  = { "pacman_func",   {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["dkong"]    = { "dkong_func",    {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongjr"]  = { "dkong_func",    {229,154}, {096,050}, YEL, false, false, 1}
-	rom_table["dkongx"]   = { "dkong_func",    {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongx11"] = { "dkong_func",    {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongpe"]  = { "dkong_func",    {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkonghrd"] = { "dkong_func",    {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongf"]   = { "dkong_func",    {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongj"]   = { "dkong_func",    {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["asteroid"] = { "asteroid_func", {008,008}, {540,240}, WHT, false, true,  3}
-	rom_table["cclimber"] = { "cclimber_func", {009,048}, {156,080}, CYN, true,  true,  1}
+	-- supported rom name     function     tally yx    msg yx    col  flip   rotate scale
+	rom_table["frogger"] =  {"frogr_func", {237,009}, {102,050}, GRN, false, false, 1}  -- testing / not working
+	rom_table["invaders"] = {"invad_func", {237,009}, {102,050}, GRN, false, false, 1}
+	rom_table["galaga"]   = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
+	rom_table["galagamf"] = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
+	rom_table["galagamk"] = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
+	rom_table["galaxian"] = {"galax_func", {052,216}, {328,052}, WHT, true,  false, 3}
+	rom_table["superg"]   = {"galax_func", {052,216}, {328,052}, WHT, true,  false, 3}
+	rom_table["moonaln"]  = {"galax_func", {052,216}, {328,052}, WHT, true,  false, 3}
+	rom_table["pacman"]   = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["pacmanf"]  = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["mspacman"] = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["mspacmnf"] = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["mspacmat"] = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["pacplus"]  = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["dkong"]    = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["dkongjr"]  = {"dkong_func", {229,154}, {096,050}, YEL, false, false, 1}
+	rom_table["dkongx"]   = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["dkongx11"] = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["dkongpe"]  = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["dkonghrd"] = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["dkongf"]   = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["dkongj"]   = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["asteroid"] = {"aster_func", {008,008}, {540,240}, WHT, false, true,  3}
+	rom_table["cclimber"] = {"climb_func", {009,048}, {156,080}, CYN, true,  true,  1}
 
 	-- encoded message data
 	local message_data = {"6s2S2s4S2S2SSS6Ss2SSSS4S 6S3S6S6", "2S2 2S2 2s2s2S2SSS2S2S3SSSs2s2Ss2S 2 2s2S2S 2s",
@@ -91,14 +92,36 @@ function continue.startplugin()
 	---------------------------------------------------------------------------
 	-- Game specific functions
 	---------------------------------------------------------------------------
-	function invaders_func()
+	function frogr_func()
+		-- No commented rom disassembly is available
+		-- Useful map info from MAME Driver:
+		-- map(0x0000, 0x3fff).rom();
+		-- map(0x8000, 0x87ff).ram();
+		--map(0xa800, 0xabff).mirror(0x0400).ram().w(FUNC(galaxian_state::galaxian_videoram_w)).share("videoram");
+		--map(0xb000, 0xb0ff).mirror(0x0700).ram().w(FUNC(galaxian_state::galaxian_objram_w)).share("spriteram");
+		--PORT_START("IN1")
+		--PORT_DIPNAME( 0x03, 0x00, DEF_STR( Lives ) )
+		--PORT_DIPSETTING(    0x00, "3" )
+		--PORT_DIPSETTING(    0x01, "5" )
+		--PORT_DIPSETTING(    0x02, "7" )
+		--PORT_DIPSETTING(    0x03, "256 (Cheat)")
+		--PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_START1 )
+		b_push_p1 = i_frame_stop and not to_bits(ports[":IN1"]:read())[8]
+
+		-- read starting lives from dip
+		_bits = to_bits(ports[':IN1']:read())
+		h_start_lives = 3
+		if _bits[1] == 1 and _bits[2] == 0 then h_start_lives = 5 end
+		if _bits[1] == 0 and _bits[2] == 1 then h_start_lives = 7 end
+		if _bits[1] == 1 and _bits[2] == 1 then h_start_lives = 256 end
+
+	end
+
+	function invad_func()
 		-- ROM Disassembly at:
 		-- https://computerarcheology.com
 		h_mode = read(0x20ef)  -- 1=game running, 0=demo or splash screens
 		_lives = read(0x21ff)
-		if not h_start_lives and h_mode >= 1 and _lives > 0 then
-			h_start_lives = _lives
-		end
 		b_1p_game = read(0x20ce, 0)
 		b_reset_tally = h_mode == 0 or i_tally == nil
 		b_show_tally = h_mode == 1
@@ -168,7 +191,7 @@ function continue.startplugin()
 		end
 	end
 
-	function galaxian_func()
+	function galax_func()
 		-- ROM disassembly at:
 		-- http://seanriddle.com/galaxian.asm
 		h_mode = read(0x400a)
@@ -205,7 +228,7 @@ function continue.startplugin()
 		end
 	end
 
-	function galaga_func()
+	function galag_func()
 		-- ROM disassembly at:
 		-- https://github.com/hackbar/galaga
 		h_mode = read(0x9201)  -- 0=game ended, 1=attract, 2=ready to start, 3=playing
@@ -242,7 +265,7 @@ function continue.startplugin()
 		end
 	end
 
-	function cclimber_func()
+	function climb_func()
 		-- ROM Disassembly at:
 		-- https://computerarcheology.com
 		h_mode = read(0x8075)
@@ -278,7 +301,7 @@ function continue.startplugin()
 		end
 	end
 
-	function pacman_func()
+	function pacmn_func()
 		-- ROM disassembly at:
 		-- https://github.com/BleuLlama/GameDocs/blob/master/disassemble/mspac.asm
 		h_mode = read(0x4e00)
@@ -323,7 +346,7 @@ function continue.startplugin()
 		end
 	end
 
-	function asteroid_func()
+	function aster_func()
 		-- Rom disassembly at:
 		-- https://github.com/nmikstas/asteroids-disassembly/tree/master/AsteroidsSource
 		h_mode = read(0x21b)
