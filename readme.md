@@ -55,11 +55,11 @@ Sean Riddle for Galaxians Rom disassembly resources at:
 Kef Schecter (furrykey) for Donkey Kong Rom disassembly resources at:
 - https://github.com/furrykef/dkdasm/blob/master/dkong.asm
 
+Rich McFerron for Space Invaders and Crazy Climber ROM disassembly resources at
+- https://computerarcheology.com/Arcade/
+
 nmikstas for Asteroids ROM disassembly resources at:
 - https://github.com/nmikstas/asteroids-disassembly/tree/master/AsteroidsSource
-
-Rich McFerron for Crazy Climber ROM disassembly resources at
-- https://computerarcheology.com/Arcade/CrazyClimber/
 
 hackbar and neiderm for Galaga ROM disassembly resources at
 - https://github.com/hackbar/galaga
@@ -67,7 +67,7 @@ hackbar and neiderm for Galaga ROM disassembly resources at
 
 ## What's next
 
-I would like to add support for other classic games: Galaga, Space Invaders, Dig Dug, Defender and other Pac-Man variants (Super Pac-Man, Jr. Pac-Man).
+I would like to add support for other classic games: Space Invaders, Dig Dug, Defender and other Pac-Man variants (Super Pac-Man, Jr. Pac-Man).
 
 Let me know if you have any requests.  It greatly helps when there is a rom disassembly available.
 
