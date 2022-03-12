@@ -20,10 +20,13 @@ The plugin currently supports these games:
 - Donkey Kong Junior
 - Asteroids
 - Crazy Climber
+- *Space Invaders (Work in progress)
 
 Other variants of these games are also supported (including):
 - Pac-Man Plus
 - Ms. Pac-Man Attack
+- Pac-Man and Ms. Pac-Man Speed Up Hacks
+- Galaga Fast Shoot Hack
 - Super Galaxians
 - Moon Alien
 - DK II Jumpman Returns 

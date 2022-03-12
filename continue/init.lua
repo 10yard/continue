@@ -36,12 +36,16 @@ function continue.startplugin()
 	local rom_function
 	-- supported rom name   function           tally yx   msg yx     col  flip   rotate scale
 	rom_table["invaders"] = { "invaders_func", {237,009}, {102,050}, GRN, false, false, 1}  -- work in progress
-	rom_table["galaga"] =   { "galaga_func",   {016,219}, {102,050}, WHT, true,  false, 1}
+	rom_table["galaga"]   = { "galaga_func",   {016,219}, {102,050}, WHT, true,  false, 1}
+	rom_table["galagamf"] = { "galaga_func",   {016,219}, {102,050}, WHT, true,  false, 1}
+	rom_table["galagamk"] = { "galaga_func",   {016,219}, {102,050}, WHT, true,  false, 1}
 	rom_table["galaxian"] = { "galaxian_func", {052,216}, {328,052}, WHT, true,  false, 3}
 	rom_table["superg"]   = { "galaxian_func", {052,216}, {328,052}, WHT, true,  false, 3}
 	rom_table["moonaln"]  = { "galaxian_func", {052,216}, {328,052}, WHT, true,  false, 3}
 	rom_table["pacman"]   = { "pacman_func",   {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["pacmanf"]  = { "pacman_func",   {018,216}, {120,050}, WHT, true,  false, 1}
 	rom_table["mspacman"] = { "pacman_func",   {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["mspacmnf"] = { "pacman_func",   {018,216}, {120,050}, WHT, true,  false, 1}
 	rom_table["mspacmat"] = { "pacman_func",   {018,216}, {120,050}, WHT, true,  false, 1}
 	rom_table["pacplus"]  = { "pacman_func",   {018,216}, {120,050}, WHT, true,  false, 1}
 	rom_table["dkong"]    = { "dkong_func",    {219,009}, {096,050}, CYN, false, false, 1}
