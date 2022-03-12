@@ -70,7 +70,7 @@ hackbar and neiderm for Galaga ROM disassembly resources at
 
 ## What's next
 
-I would like to add support for other classic games: Space Invaders, Dig Dug, Defender and other Pac-Man variants (Super Pac-Man, Jr. Pac-Man).
+I would like to add support for other classic games: Dig Dug, Defender and other Pac-Man variants (Super Pac-Man, Jr. Pac-Man).
 
 Let me know if you have any requests.  It greatly helps when there is a rom disassembly available.
 
