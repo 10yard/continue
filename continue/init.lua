@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------------------
 local exports = {}
 exports.name = "continue"
-exports.version = "0.12"
+exports.version = "0.13"
 exports.description = "Continue plugin"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -35,7 +35,7 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local rom_function
 	-- supported rom name     function     tally yx    msg yx    col  flip   rotate scale
-	rom_table["frogger"] =  {"frogr_func", {016,219}, {336,050}, GRN, true,  false, 3}
+	rom_table["frogger"] =  {"frogr_func", {052,219}, {336,050}, WHT, true,  false, 3}
 	rom_table["invaders"] = {"invad_func", {237,009}, {102,050}, GRN, false, false, 1}
 	rom_table["galaga"]   = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
 	rom_table["galagamf"] = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
@@ -95,26 +95,24 @@ function continue.startplugin()
 	function frogr_func()
 		-- No commented rom disassembly is available. I'm working this one out using MAME debugger.
 		-- Useful map info from MAME Driver:
-		-- map(0x8000, 0x87ff).ram();
-		-- map(0xa800, 0xabff).mirror(0x0400).ram().w(FUNC(galaxian_state::galaxian_videoram_w)).share("videoram");
+		-- map(0x8000, 0x87ff) is ram
+		-- map(0xa800, 0xabff) is videoram
 		h_mode = read(0x803f) -- 1=not playing, 3=playing game (can mean attract mode too)
 		h_start_lives = read(0x83e4)
 		b_1p_game = read(0x83fe) == 1
 		b_push_p1 = i_frame_stop and not to_bits(ports[":IN1"]:read())[8]
 		b_reset_tally = h_mode == 1 or i_tally == nil
+		b_show_tally = h_mode == 3 and b_1p_game
 		b_reset_continue = read(0x83e5) > 1
-										  	              --no extra lives                    --0x3c is death sprite
-		b_almost_gameover = h_mode == 3 and b_1p_game and read(0x83e5) == 0 and read(0x8045) == 0x3c
-
+										    --no extra lives                    --0x3c is a death sprite
+		b_almost_gameover = h_mode == 3 and read(0x83e5) == 0 and read(0x8045) == 0x3c
 		if b_1p_game then
 			if b_almost_gameover and not i_frame_stop then
 				i_frame_stop = i_frame + 600
 			end
 			if i_frame_stop and i_frame_stop > i_frame then
-				--TODO: Figure out how to suspend game
 				cpu.state["H"].value = 255  -- force delay timer to keep running
 				cpu.state["L"].value = 255
-				mem:write_u8(0x8045, 0x3c)
 				draw_continue_box()
 				if b_push_p1 then
 					i_tally = i_tally + 1
@@ -123,16 +121,15 @@ function continue.startplugin()
 					mem:write_u8(0x83ea, 0)
 					i_frame_stop = nil
 
-					--TODO: reset scores
+					-- reset score in memory
+					mem:write_u8(0x83ec, 0)
+					mem:write_u8(0x83ed, 0)
+					mem:write_u8(0x83ee, 0)
+					-- clear score on screen (it's not necessary)
+					-- for _add = 0xaac1, 0xab41, 0x20 do  mem:write_u8(_add, 0) end
 				end
-			else
-				--mem:write_u8(0x8888, 1) -- unsuspend game
 			end
 		end
-		-- set of bytes appears to be a game timer.  combination of timer_dec or timer_hex with timer_tick is unique
-		--timer_dec = read(0x83de)  -- number of seconds left in game (dec)
-		--timer_hex = read(0x83dd)  -- number of seconds left in game (hex)
-		--timer_tick = read(0x83dc)  -- alternating ticker, 32 per second.
 	end
 
 	function invad_func()

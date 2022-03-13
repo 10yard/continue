@@ -7,7 +7,7 @@ The continue option will appear before your game is over with a 10 second countd
 A tally of the number of continues made will appear at the top of the screen.
 
 
-![Continue Plugin Screenshot](https://i.imgur.com/b15LIZB.png)
+![Continue Plugin Screenshot](https://i.imgur.com/ihNmo1y.png)
 
 
 The plugin currently supports these games:
@@ -16,6 +16,7 @@ The plugin currently supports these games:
 - Ms. Pac-Man
 - Galaga
 - Galaxians
+- Frogger
 - Donkey Kong
 - Donkey Kong Junior
 - Asteroids
@@ -70,8 +71,7 @@ hackbar and neiderm for Galaga ROM disassembly resources at
 
 ## What's next
 
-I would like to add support for other classic games.  I am currently working on adding Frogger.
-
+I would like to add support for other classic games.
 Let me know if you have any requests.  It greatly helps when there is a rom disassembly available.
 
 

@@ -1,4 +1,4 @@
-set version=v0.12
+set version=v0.13
 
 set zip_path="C:\Program Files\7-Zip\7z"
 del releases\continue_plugin_%version%.zip
