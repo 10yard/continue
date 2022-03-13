@@ -20,7 +20,7 @@ The plugin currently supports these games:
 - Donkey Kong Junior
 - Asteroids
 - Crazy Climber
-- *Space Invaders (Work in progress)
+- Space Invaders
 
 Other variants of these games are also supported (including):
 - Pac-Man Plus
@@ -70,7 +70,7 @@ hackbar and neiderm for Galaga ROM disassembly resources at
 
 ## What's next
 
-I would like to add support for other classic games: Dig Dug, Defender and other Pac-Man variants (Super Pac-Man, Jr. Pac-Man).
+I would like to add support for other classic games.  I am currently working on adding Frogger.
 
 Let me know if you have any requests.  It greatly helps when there is a rom disassembly available.
 

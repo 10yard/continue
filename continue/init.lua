@@ -93,28 +93,44 @@ function continue.startplugin()
 	-- Game specific functions
 	---------------------------------------------------------------------------
 	function frogr_func()
-		-- No commented rom disassembly is available
+		-- No commented rom disassembly is available. I'm working this one out using MAME debugger.
 		-- Useful map info from MAME Driver:
-		-- map(0x0000, 0x3fff).rom();
 		-- map(0x8000, 0x87ff).ram();
-		--map(0xa800, 0xabff).mirror(0x0400).ram().w(FUNC(galaxian_state::galaxian_videoram_w)).share("videoram");
-		--map(0xb000, 0xb0ff).mirror(0x0700).ram().w(FUNC(galaxian_state::galaxian_objram_w)).share("spriteram");
-		--PORT_START("IN1")
-		--PORT_DIPNAME( 0x03, 0x00, DEF_STR( Lives ) )
-		--PORT_DIPSETTING(    0x00, "3" )
-		--PORT_DIPSETTING(    0x01, "5" )
-		--PORT_DIPSETTING(    0x02, "7" )
-		--PORT_DIPSETTING(    0x03, "256 (Cheat)")
-		--PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_START1 )
+		-- map(0xa800, 0xabff).mirror(0x0400).ram().w(FUNC(galaxian_state::galaxian_videoram_w)).share("videoram");
+		h_mode = read(0x803f) -- 1=not playing, 3=playing game (can mean attract mode too)
+		h_start_lives = read(0x83e4)
+		b_1p_game = read(0x83fe) == 1
 		b_push_p1 = i_frame_stop and not to_bits(ports[":IN1"]:read())[8]
+		b_reset_tally = h_mode == 1 or i_tally == nil
+		b_reset_continue = read(0x83e5) > 1
+										  	              --no extra lives                    --0x3c is death sprite
+		b_almost_gameover = h_mode == 3 and b_1p_game and read(0x83e5) == 0 and read(0x8045) == 0x3c
 
-		-- read starting lives from dip
-		_bits = to_bits(ports[':IN1']:read())
-		h_start_lives = 3
-		if _bits[1] == 1 and _bits[2] == 0 then h_start_lives = 5 end
-		if _bits[1] == 0 and _bits[2] == 1 then h_start_lives = 7 end
-		if _bits[1] == 1 and _bits[2] == 1 then h_start_lives = 256 end
+		if b_1p_game then
+			if b_almost_gameover and not i_frame_stop then
+				i_frame_stop = i_frame + 600
+			end
+			if i_frame_stop and i_frame_stop > i_frame then
+				--TODO: Figure out how to suspend game
+				--mem:write_u8(0x8888, 0) -- suspend game
+				draw_continue_box()
+				if b_push_p1 then
+					i_tally = i_tally + 1
+					mem:write_u8(0x83e5, h_start_lives + 1)
+					mem:write_u8(0x83ae, 1)
+					mem:write_u8(0x83ea, 0)
+					i_frame_stop = nil
 
+					--TODO: reset scores
+				end
+			else
+				--mem:write_u8(0x8888, 1) -- unsuspend game
+			end
+		end
+		-- set of bytes appears to be a game timer.  combination of timer_dec or timer_hex with timer_tick is unique
+		--timer_dec = read(0x83de)  -- number of seconds left in game (dec)
+		--timer_hex = read(0x83dd)  -- number of seconds left in game (hex)
+		--timer_tick = read(0x83dc)  -- alternating ticker, 32 per second.
 	end
 
 	function invad_func()
