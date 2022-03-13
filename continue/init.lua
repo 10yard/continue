@@ -35,7 +35,7 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local rom_function
 	-- supported rom name     function     tally yx    msg yx    col  flip   rotate scale
-	rom_table["frogger"] =  {"frogr_func", {237,009}, {102,050}, GRN, false, false, 1}  -- testing / not working
+	rom_table["frogger"] =  {"frogr_func", {016,219}, {336,050}, GRN, true,  false, 3}
 	rom_table["invaders"] = {"invad_func", {237,009}, {102,050}, GRN, false, false, 1}
 	rom_table["galaga"]   = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
 	rom_table["galagamf"] = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
@@ -112,7 +112,9 @@ function continue.startplugin()
 			end
 			if i_frame_stop and i_frame_stop > i_frame then
 				--TODO: Figure out how to suspend game
-				--mem:write_u8(0x8888, 0) -- suspend game
+				cpu.state["H"].value = 255  -- force delay timer to keep running
+				cpu.state["L"].value = 255
+				mem:write_u8(0x8045, 0x3c)
 				draw_continue_box()
 				if b_push_p1 then
 					i_tally = i_tally + 1
