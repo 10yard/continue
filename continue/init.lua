@@ -24,8 +24,8 @@ function continue.startplugin()
 	local mac, scr, cpu, mem
 
 	-- general use variables
-	local h_mode, h_start_lives
-	local i_frame, i_frame_stop, i_tally
+	local h_mode, h_start_lives, h_active_lives
+	local i_frame, i_stop, i_tally
 	local b_1p_game, b_game_restart, b_almost_gameover, b_reset_continue, b_reset_tally, b_show_tally, b_push_p1
 
 	-- colours
@@ -93,24 +93,25 @@ function continue.startplugin()
 	-- Game specific functions
 	---------------------------------------------------------------------------
 	function frogr_func()
-		-- No commented rom disassembly is available. I'm working this one out using MAME debugger.
+		-- No commented rom disassembly available. I worked this one out using MAME debugger.
 		-- Useful map info from MAME Driver:
-		-- map(0x8000, 0x87ff) is ram
-		-- map(0xa800, 0xabff) is videoram
+		--   map(0x8000, 0x87ff) is ram
+		--   map(0xa800, 0xabff) is videoram
 		h_mode = read(0x803f) -- 1=not playing, 3=playing game (can mean attract mode too)
 		h_start_lives = read(0x83e4)
+		h_active_lives = read(0x83e5)
 		b_1p_game = read(0x83fe) == 1
-		b_push_p1 = i_frame_stop and not to_bits(ports[":IN1"]:read())[8]
+		b_push_p1 = i_stop and not to_bits(ports[":IN1"]:read())[8]
 		b_reset_tally = h_mode == 1 or i_tally == nil
 		b_show_tally = h_mode == 3 and b_1p_game
-		b_reset_continue = read(0x83e5) > 1
-										    --no extra lives                    --0x3c is a death sprite
-		b_almost_gameover = h_mode == 3 and read(0x83e5) == 0 and read(0x8045) == 0x3c
+		b_reset_continue = h_mode == 1 or h_active_lives >= 1
+
+		b_almost_gameover = h_mode == 3 and h_active_lives == 0 and read(0x8045) == 0x3c -- 0x3c is a death sprite
 		if b_1p_game then
-			if b_almost_gameover and not i_frame_stop then
-				i_frame_stop = i_frame + 600
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 600
 			end
-			if i_frame_stop and i_frame_stop > i_frame then
+			if i_stop and i_stop > i_frame then
 				cpu.state["H"].value = 255  -- force delay timer to keep running
 				cpu.state["L"].value = 255
 				draw_continue_box()
@@ -119,49 +120,43 @@ function continue.startplugin()
 					mem:write_u8(0x83e5, h_start_lives + 1)
 					mem:write_u8(0x83ae, 1)
 					mem:write_u8(0x83ea, 0)
-					i_frame_stop = nil
-
+					i_stop = nil
 					-- reset score in memory
 					mem:write_u8(0x83ec, 0)
 					mem:write_u8(0x83ed, 0)
 					mem:write_u8(0x83ee, 0)
-					-- clear score on screen (it's not necessary)
-					-- for _add = 0xaac1, 0xab41, 0x20 do  mem:write_u8(_add, 0) end
 				end
 			end
 		end
 	end
 
 	function invad_func()
-		-- ROM Disassembly at:
-		-- https://computerarcheology.com
+		-- ROM Disassembly at https://computerarcheology.com
 		h_mode = read(0x20ef)  -- 1=game running, 0=demo or splash screens
-		_lives = read(0x21ff)
+		h_active_lives = read(0x21ff)
 		b_1p_game = read(0x20ce, 0)
 		b_reset_tally = h_mode == 0 or i_tally == nil
 		b_show_tally = h_mode == 1
-		b_push_p1 = i_frame_stop and to_bits(ports[':IN1']:read())[3] == 1
+		b_push_p1 = i_stop and to_bits(ports[':IN1']:read())[3] == 1
 		-- player was blown up on last life. Animation sprite and timer indicate a specific frame
-		b_almost_gameover = read(0x2015) < 128 and _lives == 0 and read(0x2016) == 1 and read(0x2017) == 1
-		b_reset_continue = _lives > 2
+		b_almost_gameover = read(0x2015) < 128 and h_active_lives == 0 and read(0x2016) == 1 and read(0x2017) == 1
+		b_reset_continue = mode == 0 or h_active_lives >= 1
 		h_start_lives = 3
-		-- read starting lives from dip
-		if to_bits(ports[':IN2']:read())[1] == 1 then h_start_lives = h_start_lives + 1 end
-		if to_bits(ports[':IN2']:read())[2] == 1 then h_start_lives = h_start_lives + 1 end
+		if to_bits(ports[':IN2']:read())[1] == 1 then h_start_lives = h_start_lives + 1 end  -- dip adjust start lives
+		if to_bits(ports[':IN2']:read())[2] == 1 then h_start_lives = h_start_lives + 1 end  -- dip adjust start lives
 
 		if b_1p_game then
-			if b_almost_gameover and not i_frame_stop then
-				i_frame_stop = i_frame + 600
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 600
 			end
-			if i_frame_stop and i_frame_stop > i_frame then
+			if i_stop and i_stop > i_frame then
 				mem:write_u8(0x20e9, 0) -- suspend game
 				draw_continue_box()
 				if b_push_p1 then
 					i_tally = i_tally + 1
 					mem:write_u8(0x21ff, h_start_lives)
 					mem:write_u8(0x20e9, 1) -- unsuspend game
-					i_frame_stop = nil
-
+					i_stop = nil
 					--update score in memory
 					mem:write_u8(0x20f8, 0)
 					mem:write_u8(0x20f9, 0)
@@ -176,8 +171,7 @@ function continue.startplugin()
 	end
 
 	function dkong_func()
-		-- ROM disassembly at:
-		-- https://github.com/furrykef/dkdasm/blob/master/dkong.asm
+		-- ROM disassembly at https://github.com/furrykef/dkdasm/blob/master/dkong.asm
 		h_mode = read(0x600a)
 		h_start_lives = read(0x6020)
 		b_1p_game = read(0x600f, 0)
@@ -185,20 +179,20 @@ function continue.startplugin()
 		b_reset_continue = h_mode == 11
 		b_reset_tally = h_mode == 7 or i_tally == nil
 		b_show_tally = h_mode >= 8 and h_mode <= 16
-		b_push_p1 = i_frame_stop and to_bits(read(0x7d00))[3] == 1
+		b_push_p1 = i_stop and to_bits(read(0x7d00))[3] == 1
 
 		-- Logic
 		if b_1p_game then
-			if b_almost_gameover and not i_frame_stop then
-				i_frame_stop = i_frame + 600
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 600
 			end
-			if i_frame_stop and i_frame_stop > i_frame then
+			if i_stop and i_stop > i_frame then
 				mem:write_u8(0x6009, 8) -- suspend game
 				draw_continue_box()
 				if b_push_p1 then
 					i_tally = i_tally + 1
 					mem:write_u8(0x6228, h_start_lives + 1)
-					i_frame_stop = nil
+					i_stop = nil
 					for _add = 0x60b2, 0x60b4 do  mem:write_u8(_add, 0) end  -- reset score in memory
 					for _add = 0x76e1, 0x7781, 0x20 do  mem:write_u8(_add, 0) end  -- reset score on screen
 				end
@@ -207,8 +201,7 @@ function continue.startplugin()
 	end
 
 	function galax_func()
-		-- ROM disassembly at:
-		-- http://seanriddle.com/galaxian.asm
+		-- ROM disassembly at http://seanriddle.com/galaxian.asm
 		h_mode = read(0x400a)
 		h_start_lives = 2 + read(0x401f)  -- read dip switch
 		if emu:romname() == "moonaln" then
@@ -216,24 +209,23 @@ function continue.startplugin()
 		end
 		b_1p_game = read(0x400e, 0)
 		b_almost_gameover = read(0x4201, 1) and read(0x421d, 0) and read(0x4205, 10)
-		b_reset_continue = read(0x4200, 1)
-		b_show_tally = read(0x4006)
+		b_reset_continue = read(0x4200, 1)  -- player has spawned
+		b_show_tally = read(0x4006)  -- game is in play
 		b_reset_tally = h_mode == 1 or i_tally == nil
-		b_push_p1 = i_frame_stop and read(0x6800, 1)
+		b_push_p1 = i_stop and read(0x6800, 1)
 
 		-- Logic
 		if b_1p_game then
-			if b_almost_gameover and not i_frame_stop then
-				i_frame_stop = i_frame + 600
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 600
 			end
-			if i_frame_stop and i_frame_stop > i_frame then
+			if i_stop and i_stop > i_frame then
 				mem:write_u8(0x4205, 0x10)  -- suspend game by setting the animation counter
 				draw_continue_box()
 				if b_push_p1 then
 					i_tally = i_tally + 1
 					mem:write_u8(0x421d, h_start_lives)
-					i_frame_stop = nil
-
+					i_stop = nil
 					for _add = 0x40a2, 0x40a4 do  mem:write_u8(_add, 0) end  -- reset score in memory
 					for _add = 0x52e1, 0x53a1, 0x20 do mem:write_u8(_add, 16) end  -- reset onscreen score
 					mem:write_u8(0x5301, 0)  -- rightmost zeros on screen
@@ -244,34 +236,34 @@ function continue.startplugin()
 	end
 
 	function galag_func()
-		-- ROM disassembly at:
-		-- https://github.com/hackbar/galaga
+		-- ROM disassembly at https://github.com/hackbar/galaga
 		h_mode = read(0x9201)  -- 0=game ended, 1=attract, 2=ready to start, 3=playing
 		h_start_lives = read(0x9982) + 1  --refer file "mrw.s" ram2 0x9800 + offset
+		h_active_lives = read(0x9820)
 		b_1p_game = read(0x99b3, 0)
 		b_reset_tally = h_mode == 2 or i_tally == nil
 		b_show_tally = h_mode == 3
-		b_push_p1 = i_frame_stop and to_bits(ports[':IN1']:read())[3] == 0
+		b_push_p1 = i_stop and to_bits(ports[':IN1']:read())[3] == 0
+		b_reset_continue = h_mode ~= 3 or h_active_lives >= 1
+
 		-- check video ram for "CAPT" (part of FIGHTER CAPTURED message)
 		_capt = read(0x81f1) == 0xc and read(0x81d1) == 0xa and read(0x81b1) == 0x19 and read(0x8191) == 0x1d
-		b_reset_continue = h_mode ~= 3 or (not _capt and read(0x8863) == 2)  -- not playing or explosion animation done
 		-- no more ships and (explosion animation almost done or fighter was captured)
 		b_almost_gameover = read(0x9820) == 0 and (read(0x8863) == 3 or _capt)
 
 		if b_1p_game then
-			if b_almost_gameover and not i_frame_stop then
-				i_frame_stop = i_frame + 600
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 600
 			end
-			if i_frame_stop and i_frame_stop > i_frame then
-				if not _captured then
+			if i_stop and i_stop > i_frame then
+				if not _capt then
 					mem:write_u8(0x92a0, 1)  -- suspend game by resetting the timer (counts upward to 255)
 				end
 				draw_continue_box()
 				if b_push_p1 then
 					i_tally = i_tally + 1
 					mem:write_u8(0x9820, h_start_lives)
-					i_frame_stop = nil
-
+					i_stop = nil
 					-- reset score in memory
 					mem:write_u8(0x83f9, 0)
 					for _add = 0x83fa, 0x83fe do mem:write_u8(_add, 36) end  -- reset score on screen
@@ -281,22 +273,22 @@ function continue.startplugin()
 	end
 
 	function climb_func()
-		-- ROM Disassembly at:
-		-- https://computerarcheology.com
+		-- ROM Disassembly at https://computerarcheology.com
 		h_mode = read(0x8075)
 		h_start_lives = read(0x807e)
+		h_active_lives = read(0x80d8)
 		b_1p_game = read(0x8080, 0)
-		b_almost_gameover = read(0x8073, 0) and read(0x80d8, 0)
-		b_reset_continue = h_mode == 0 or read(0x80d8) > 0
+		b_almost_gameover = read(0x8073, 0) and h_active_lives == 0
+		b_reset_continue = h_mode == 0 or h_active_lives >= 1
 		b_show_tally = h_mode == 1
 		b_reset_tally = h_mode == 0 or i_tally == nil
-		b_push_p1 = i_frame_stop and to_bits(read(0xb800))[3] == 1
+		b_push_p1 = i_stop and to_bits(read(0xb800))[3] == 1
 
 		if b_1p_game then
-			if b_almost_gameover and not i_frame_stop then
-				i_frame_stop = i_frame + 600
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 600
 			end
-			if i_frame_stop and i_frame_stop > i_frame then
+			if i_stop and i_stop > i_frame then
 				cpu.state["H"].value = 255  -- force delay timer to keep running
 				cpu.state["L"].value = 255
 				scr:draw_box(0, 224, 256, 80, BLK, BLK)  -- black background
@@ -304,9 +296,8 @@ function continue.startplugin()
 				if b_push_p1 then
 					mem:write_u8(0x80d8, h_start_lives + 1)
 					mem:write_u8(0x8073, 1)
-					i_frame_stop = nil
+					i_stop = nil
 					i_tally = i_tally + 1
-
 					-- reset score in memory
 					mem:write_u8(0x80d9, 0)
 					mem:write_u8(0x80da, 0)
@@ -317,26 +308,26 @@ function continue.startplugin()
 	end
 
 	function pacmn_func()
-		-- ROM disassembly at:
-		-- https://github.com/BleuLlama/GameDocs/blob/master/disassemble/mspac.asm
+		-- ROM disassembly at https://github.com/BleuLlama/GameDocs/blob/master/disassemble/mspac.asm
 		h_mode = read(0x4e00)
 		h_start_lives = read(0x4e6f)
+		h_active_lives = read(0x4e14)
 		b_1p_game = read(0x4e70, 0)
 		b_game_restart = read(0x4e04, 2)
-		b_almost_gameover = h_mode == 3 and read(0x4e14, 0) and read(0x4e04,4)
+		b_almost_gameover = h_mode == 3 and h_active_lives == 0 and read(0x4e04,4)
 		b_reset_continue = read(0x4e03, 3)
 		b_reset_tally = h_mode == 2 or i_tally == nil
 		b_show_tally = h_mode == 3
-		b_push_p1 = i_frame_stop and to_bits(read(0x5040))[6] == 0
+		b_push_p1 = i_stop and to_bits(read(0x5040))[6] == 0
 
 		-- Logic
 		if b_1p_game then
-			if b_almost_gameover and not i_frame_stop then
-				i_frame_stop = i_frame + 600
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 600
 				_pills_eaten = read(0x4e0e)
 				_level = read(0x4e13)
 			end
-			if i_frame_stop and i_frame_stop > i_frame then
+			if i_stop and i_stop > i_frame then
 				mem:write_u8(0x4e04, 4)  -- suspend game
 				draw_continue_box()
 				if b_push_p1 then
@@ -344,7 +335,7 @@ function continue.startplugin()
 					mem:write_u8(0x4e04, 0)  -- unsuspend
 					mem:write_u8(0x4e14, h_start_lives)  --update number of lives
 					mem:write_u8(0x4e15, h_start_lives - 1)  --update displayed number of lives
-					i_frame_stop = nil
+					i_stop = nil
 
 					for _addr = 0x4e80, 0x4e82 do mem:write_u8(_addr, 0) end  -- reset score in memory
 					--reset score on screen
@@ -362,23 +353,23 @@ function continue.startplugin()
 	end
 
 	function aster_func()
-		-- Rom disassembly at:
-		-- https://github.com/nmikstas/asteroids-disassembly/tree/master/AsteroidsSource
+		-- Rom disassembly at https://github.com/nmikstas/asteroids-disassembly/tree/master/AsteroidsSource
 		h_mode = read(0x21b)
 		h_start_lives = read(0x56)
+		h_active_lives = read(0x57)
 		b_1p_game = read(0x1c, 1)
 		b_reset_continue = h_mode == 255
 		b_reset_tally = not b_1p_game or i_tally == nil
 		b_show_tally = b_1p_game
-		b_almost_gameover = h_mode == 160 and read(0x57, 0)
-		b_push_p1 = i_frame_stop and read(0x2403, 128)
+		b_almost_gameover = h_mode == 160 and h_active_lives == 0
+		b_push_p1 = i_stop and read(0x2403, 128)
 
 		-- Logic
 		if b_1p_game then
-			if b_almost_gameover and not i_frame_stop then
-				i_frame_stop = i_frame + 600
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 600
 			end
-			if i_frame_stop and i_frame_stop > i_frame then
+			if i_stop and i_stop > i_frame then
 				mem:write_u8(0x21b, 160)  -- suspend game by setting the game mode counter
 
 				message_data = flip_table(message_data_r2)
@@ -388,7 +379,7 @@ function continue.startplugin()
 					mem:write_u8(0x21b, 200)  -- skip some of the explosion animation
 					i_tally = i_tally + 1
 					mem:write_u8(0x57, h_start_lives)
-					i_frame_stop = nil
+					i_stop = nil
 
 					--reset score in memory
 					mem:write_u8(0x52, 0)
@@ -436,7 +427,7 @@ function continue.startplugin()
 			rom_function()
 			if b_reset_tally then i_tally = 0 end
 			if b_1p_game then
-				if b_reset_continue then i_frame_stop = nil end
+				if b_reset_continue then i_stop = nil end
 				if b_show_tally then
 					draw_tally(i_tally)
 				end
@@ -467,7 +458,7 @@ function continue.startplugin()
 
 	function draw_progress_bar()
 		local _y, _x, _scale = rom_data[3][1], rom_data[3][2], rom_data[7]
-		local _cnt = math.floor((i_frame_stop - i_frame) / 6)
+		local _cnt = math.floor((i_stop - i_frame) / 6)
 		local _col = rom_data[4]
 
 		if _cnt < 40 and _cnt % 6 >= 3 then _col = RED end
