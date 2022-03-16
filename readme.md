@@ -17,6 +17,7 @@ The plugin currently supports these games:
 - Galaga
 - Galaxians
 - Frogger
+- Robotron
 - Donkey Kong
 - Donkey Kong Junior
 - Asteroids
@@ -50,13 +51,13 @@ The Plugin is run by adding `-plugin continue` to your MAME arguments e.g.
 
 ## Thanks to
 
-Scott Lawrence (BleuLlama) for Pac-Man/Ms.Pac-Man Rom Disassembly resources at:
+Scott Lawrence (BleuLlama) for Pac-Man/Ms.Pac-Man ROM Disassembly resources at:
 - https://github.com/BleuLlama/GameDocs/blob/master/disassemble/mspac.asm
 
-Sean Riddle for Galaxians Rom disassembly resources at:
-- http://seanriddle.com/galaxian.asm
+Sean Riddle for Galaxians and Robotron ROM disassembly resources at:
+- http://seanriddle.com
 
-Kef Schecter (furrykey) for Donkey Kong Rom disassembly resources at:
+Kef Schecter (furrykey) for Donkey Kong ROM disassembly resources at:
 - https://github.com/furrykef/dkdasm/blob/master/dkong.asm
 
 Rich McFerron for Space Invaders and Crazy Climber ROM disassembly resources at

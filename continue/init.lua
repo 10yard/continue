@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------------------
 local exports = {}
 exports.name = "continue"
-exports.version = "0.13"
+exports.version = "0.14"
 exports.description = "Continue plugin"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -24,7 +24,7 @@ function continue.startplugin()
 	local mac, scr, cpu, mem
 
 	-- general use variables
-	local h_mode, h_start_lives, h_active_lives
+	local h_mode, h_start_lives, h_remain_lives
 	local i_frame, i_stop, i_tally
 	local b_1p_game, b_game_restart, b_almost_gameover, b_reset_continue, b_reset_tally, b_show_tally, b_push_p1
 
@@ -35,63 +35,109 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local rom_function
 	-- supported rom name     function     tally yx    msg yx    col  flip   rotate scale
-	rom_table["frogger"] =  {"frogr_func", {052,219}, {336,050}, WHT, true,  false, 3}
-	rom_table["invaders"] = {"invad_func", {237,009}, {102,050}, GRN, false, false, 1}
-	rom_table["galaga"]   = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
-	rom_table["galagamf"] = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
-	rom_table["galagamk"] = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
-	rom_table["galaxian"] = {"galax_func", {052,216}, {328,052}, WHT, true,  false, 3}
-	rom_table["superg"]   = {"galax_func", {052,216}, {328,052}, WHT, true,  false, 3}
-	rom_table["moonaln"]  = {"galax_func", {052,216}, {328,052}, WHT, true,  false, 3}
-	rom_table["pacman"]   = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["pacmanf"]  = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["mspacman"] = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["mspacmnf"] = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["mspacmat"] = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["pacplus"]  = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["dkong"]    = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongjr"]  = {"dkong_func", {229,154}, {096,050}, YEL, false, false, 1}
-	rom_table["dkongx"]   = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongx11"] = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongpe"]  = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkonghrd"] = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongf"]   = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongj"]   = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["asteroid"] = {"aster_func", {008,008}, {540,240}, WHT, false, true,  3}
-	rom_table["cclimber"] = {"climb_func", {009,048}, {156,080}, CYN, true,  true,  1}
+	rom_table["robotron"]   = {"rbtrn_func", {000,015}, {172,96},  YEL, true,  true,  1}
+	rom_table["robotrontd"] = {"rbtrn_func", {000,015}, {172,96},  YEL, true,  true,  1}
+	rom_table["robotron12"] = {"rbtrn_func", {000,015}, {172,96},  YEL, true,  true,  1}
+	rom_table["robotronyo"] = {"rbtrn_func", {000,015}, {172,96},  YEL, true,  true,  1}
+	rom_table["robotron87"] = {"rbtrn_func", {000,015}, {172,96},  YEL, true,  true,  1}
+	rom_table["frogger"]    = {"frogr_func", {052,219}, {336,050}, WHT, true,  false, 3}
+	rom_table["invaders"]   = {"invad_func", {237,009}, {102,050}, GRN, false, false, 1}
+	rom_table["galaga"]     = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
+	rom_table["galagamf"]   = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
+	rom_table["galagamk"]   = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
+	rom_table["galaxian"]   = {"galax_func", {052,216}, {328,052}, WHT, true,  false, 3}
+	rom_table["superg"]     = {"galax_func", {052,216}, {328,052}, WHT, true,  false, 3}
+	rom_table["moonaln"]    = {"galax_func", {052,216}, {328,052}, WHT, true,  false, 3}
+	rom_table["pacman"]     = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["pacmanf"]    = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["mspacman"]   = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["mspacmnf"]   = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["mspacmat"]   = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["pacplus"]    = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
+	rom_table["dkong"]      = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["dkongjr"]    = {"dkong_func", {229,154}, {096,050}, YEL, false, false, 1}
+	rom_table["dkongx"]     = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["dkongx11"]   = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["dkongpe"]    = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["dkonghrd"]   = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["dkongf"]     = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["dkongj"]     = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["asteroid"]   = {"aster_func", {008,008}, {540,240}, WHT, false, true,  3}
+	rom_table["cclimber"]   = {"climb_func", {009,048}, {156,080}, CYN, true,  true,  1}
 
 	-- encoded message data
 	local message_data = {"6s2S2s4S2S2SSS6Ss2SSSS4S 6S3S6S6", "2S2 2S2 2s2s2S2SSS2S2S3SSSs2s2Ss2S 2 2s2S2S 2s",
-		"2S2 2S2 2SS2S2SSS2S2S 2SSSs2SSS2S2S2 2S2S 2s", "2S2 2S2s5s7SSS2S2S 2SSSS5Ss2S2S2 2s3S 2s",
-		"6s2S2SS2 2S2SSS6Ss2SSSSS 2S 2S7 5SS2s", "2SS2S2 2S2 2S2SSS2SSS2SSSs2S2S 2S2S2 2 3Ss2s",
-		"2SS 5S5s2S2SSS2SS 6SSS 5Ss2S2S2 2s3S 2s", "", "SSS6s5SSSS4S5s2S2s6s6 2S2 2S2 7SSs",
-		"SSSs2S2S2SSS 2s2 2S2 3s2S 2SS2S3s2 2S2 2SSSS ", "SSSs2S2S2SSS2SS2S2 4 2S 2SS2S4 2 2S2 2SSSS ",
-		"SSSs2S2S2SSS2SS2S2 7S 2SS2S7 2S2 6SSS", "SSSs2S2S2SSS2SS2S2 2 4S 2SS2S2 4 2S2 2SSSS ",
-		"SSSs2S2S2SSS 2s2 2S2 2s3S 2SS2S2s3 2S2 2SSSS ", "SSSs2S 5SSSS4S5s2S2S 2S 6 2S2s5s7SSs"}
-	local message_data_r1 = {"SSs7","SSs7","$ 1S1","$ 1S1","$ 1S1","$ 5","$s3 ","$SS","$6","SS1 7","SS1 1SS", "7 1SS", 
-		"7 1SS","SS1 7","SS1s6","$SS"," 5S1s2 ","7 2 4","1Ss1 1s1s1","1Ss1 1s1s1","1Ss1 1s1 2","7 4 1 ",
-		" 5S2S ","$SS","SSs7","SSs7","$s1S","$s1S","$s1S","SSs7","SSs7","$SS","s3$ "," 5$","2S2SSs","1Ss1SSs","1Ss1SSs",
-		"2S2SSs"," 1S1$","$SS"," 5s7","7 7","1Ss1S1S1","1Ss1S1S1","1Ss1S1S1","7S5"," 5Ss3 ","$SS","7SSs","7 1SS",
-		"S3s1S 1 ","s3S7"," 3S 7","7 1SS","7 1SS","$SS","$SS","SS1SSs","SS1SSs","7SSs","7SSs","SS1SSs","SS1SSs","$SS",
-		"$1s2 ","1Ss1 2 4","1Ss1 1s1s1","7 1s1s1","7 1s1 2","1Ss1 4 1 ","1Ss1s2S ","$SS","7SSs","7SS 1","S3SSs1","s3S7",
-		" 3S 7","7SS 1","7SS 1","$SS"," 6 5s","7 6 ","1$1s2","1$1S1","1$1s2","7 6 "," 6 5s","$SS","7 7","7 7", 
-		"1s1s1S1S1","1s1s1s2S1","1s1s1 4s1","1s1s1 2 4","1Ss1 1s3 ","$SS","$SS","$Ss1","$Ss1","SSs7","SSs7","$Ss1","$Ss1"}
+						  "2S2 2S2 2SS2S2SSS2S2S 2SSSs2SSS2S2S2 2S2S 2s", "2S2 2S2s5s7SSS2S2S 2SSSS5Ss2S2S2 2s3S 2s",
+						  "6s2S2SS2 2S2SSS6Ss2SSSSS 2S 2S7 5SS2s", "2SS2S2 2S2 2S2SSS2SSS2SSSs2S2S 2S2S2 2 3Ss2s",
+						  "2SS 5S5s2S2SSS2SS 6SSS 5Ss2S2S2 2s3S 2s", "", "SSS6s5SSSS4S5s2S2s6s6 2S2 2S2 7SSs",
+						  "SSSs2S2S2SSS 2s2 2S2 3s2S 2SS2S3s2 2S2 2SSSS ", "SSSs2S2S2SSS2SS2S2 4 2S 2SS2S4 2 2S2 2SSSS ",
+						  "SSSs2S2S2SSS2SS2S2 7S 2SS2S7 2S2 6SSS", "SSSs2S2S2SSS2SS2S2 2 4S 2SS2S2 4 2S2 2SSSS ",
+						  "SSSs2S2S2SSS 2s2 2S2 2s3S 2SS2S2s3 2S2 2SSSS ", "SSSs2S 5SSSS4S5s2S2S 2S 6 2S2s5s7SSs"}
+	local message_data_r1 = {"SSs7","SSs7","$ 1S1","$ 1S1","$ 1S1","$ 5","$s3 ","$SS","$6","SS1 7","SS1 1SS", "7 1SS",
+							 "7 1SS","SS1 7","SS1s6","$SS"," 5S1s2 ","7 2 4","1Ss1 1s1s1","1Ss1 1s1s1","1Ss1 1s1 2","7 4 1 ",
+							 " 5S2S ","$SS","SSs7","SSs7","$s1S","$s1S","$s1S","SSs7","SSs7","$SS","s3$ "," 5$","2S2SSs","1Ss1SSs","1Ss1SSs",
+							 "2S2SSs"," 1S1$","$SS"," 5s7","7 7","1Ss1S1S1","1Ss1S1S1","1Ss1S1S1","7S5"," 5Ss3 ","$SS","7SSs","7 1SS",
+							 "S3s1S 1 ","s3S7"," 3S 7","7 1SS","7 1SS","$SS","$SS","SS1SSs","SS1SSs","7SSs","7SSs","SS1SSs","SS1SSs","$SS",
+							 "$1s2 ","1Ss1 2 4","1Ss1 1s1s1","7 1s1s1","7 1s1 2","1Ss1 4 1 ","1Ss1s2S ","$SS","7SSs","7SS 1","S3SSs1","s3S7",
+							 " 3S 7","7SS 1","7SS 1","$SS"," 6 5s","7 6 ","1$1s2","1$1S1","1$1s2","7 6 "," 6 5s","$SS","7 7","7 7",
+							 "1s1s1S1S1","1s1s1s2S1","1s1s1 4s1","1s1s1 2 4","1Ss1 1s3 ","$SS","$SS","$Ss1","$Ss1","SSs7","SSs7","$Ss1","$Ss1"}
 	local message_data_r2 = {"$SS 95","$SS 95","$$s11SS11","$$s11SS11","$$s11SS11","$$s91","$$S 6s","$$$S","$$9111",
-		"$S11s95","$S11s11$S","95s11$S","95s11$S","$S11s95","$S11S 9111","$$$S","s91SS11S 1111s","95s1111s8",
-		"11$ 11s11S 11S 11","11$ 11s11S 11S 11","11$ 11s11S 11s1111","95s8s11s","s91SS1111SSs","$$$S","$SS 95","$SS 95",
-		"$$S 11SS","$$S 11SS","$$S 11SS","$SS 95","$SS 95","$$$S","S 6$$s","s91$$","1111SS1111$SS ","11$ 11$SS ",
-		"11$ 11$SS ","1111SS1111$SS ","s11SS11$$","$$$S","s91S 95","95s95","11$ 11SS11SS11","11$ 11SS11SS11",
-		"11$ 11SS11SS11","95SS91","s91$ 6s","$$$S","95$SS ","95s11$S","SS6S 11SSs11s","S 6SS95","s6SSs95","95s11$S",
-		"95s11$S","$$$S","$$$S","$S11$SS ","$S11$SS ","95$SS ","95$SS ","$S11$SS ","$S11$SS ","$$$S","$$11S 1111s",
-		"11$ 11s1111s8","11$ 11s11S 11S 11","95s11S 11S 11","95s11S 11s1111","11$ 11s8s11s","11$ 11S 1111SSs","$$$S",
-		"95$SS ","95$Ss11","SS6$SS 11","S 6SS95","s6SSs95","95$Ss11","95$Ss11","$$$S","s9111s91S ","95s9111s",
-		"11$$11S 1111","11$$11SS11","11$$11S 1111","95s9111s","s9111s91S ","$$$S","95s95","95s95","11S 11S 11SS11SS11",
-		"11S 11S 11S 1111SS11","11S 11S 11s8S 11","11S 11S 11s1111s8","11$ 11s11S 6s","$$$S","$$$S","$$$ 11","$$$ 11",
-		"$SS 95","$SS 95","$$$ 11","$$$ 11"};
+							 "$S11s95","$S11s11$S","95s11$S","95s11$S","$S11s95","$S11S 9111","$$$S","s91SS11S 1111s","95s1111s8",
+							 "11$ 11s11S 11S 11","11$ 11s11S 11S 11","11$ 11s11S 11s1111","95s8s11s","s91SS1111SSs","$$$S","$SS 95","$SS 95",
+							 "$$S 11SS","$$S 11SS","$$S 11SS","$SS 95","$SS 95","$$$S","S 6$$s","s91$$","1111SS1111$SS ","11$ 11$SS ",
+							 "11$ 11$SS ","1111SS1111$SS ","s11SS11$$","$$$S","s91S 95","95s95","11$ 11SS11SS11","11$ 11SS11SS11",
+							 "11$ 11SS11SS11","95SS91","s91$ 6s","$$$S","95$SS ","95s11$S","SS6S 11SSs11s","S 6SS95","s6SSs95","95s11$S",
+							 "95s11$S","$$$S","$$$S","$S11$SS ","$S11$SS ","95$SS ","95$SS ","$S11$SS ","$S11$SS ","$$$S","$$11S 1111s",
+							 "11$ 11s1111s8","11$ 11s11S 11S 11","95s11S 11S 11","95s11S 11s1111","11$ 11s8s11s","11$ 11S 1111SSs","$$$S",
+							 "95$SS ","95$Ss11","SS6$SS 11","S 6SS95","s6SSs95","95$Ss11","95$Ss11","$$$S","s9111s91S ","95s9111s",
+							 "11$$11S 1111","11$$11SS11","11$$11S 1111","95s9111s","s9111s91S ","$$$S","95s95","95s95","11S 11S 11SS11SS11",
+							 "11S 11S 11S 1111SS11","11S 11S 11s8S 11","11S 11S 11s1111s8","11$ 11s11S 6s","$$$S","$$$S","$$$ 11","$$$ 11",
+							 "$SS 95","$SS 95","$$$ 11","$$$ 11"};
 
 	---------------------------------------------------------------------------
 	-- Game specific functions
 	---------------------------------------------------------------------------
+	function rbtrn_func()
+		h_mode = read(0x98d1)  -- 0=high score screen, 1=attract mode, 2=playing
+		h_start_lives = 3
+		h_remain_lives = read(0xbdec)
+		b_1p_game = read(0x983f, 1)
+		b_push_p1 = i_stop and to_bits(ports[":IN0"]:read())[5] == 1
+		b_reset_tally = h_mode ~= 2 or i_tally == nil
+		b_show_tally = b_1p_game and h_mode == 2
+		b_reset_continue = h_mode ~=2 or h_remain_lives >= 1
+		b_almost_gameover = h_mode == 2 and h_remain_lives == 0 and read(0x9859) == 0x1b  -- 0x1b when player dies
+
+		if b_1p_game then
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 90
+				_hide_stop = i_stop + 35  -- hide the playfield during message and for 35 frames after pushing continue
+				video.throttle_rate = 0.2 -- adjust emulation speed to allow more time for decision
+			end
+
+			if _hide_stop and _hide_stop > i_frame then
+				scr:draw_box(8,17, 282, 228, BLK, BLK)  -- temporarily hide the play field
+			end
+
+			if i_stop and i_stop > i_frame then
+				mem:write_u8(0x9848, 0)  -- switch off player collisions while waiting for decision
+				draw_continue_box(6)
+				if b_push_p1 then
+					video.throttle_rate = 1  -- restore emulation to full speed
+					i_tally = i_tally + 1
+					i_stop = nil
+					mem:write_u8(0xbdec, h_start_lives)
+					-- reset score in memory
+					for _addr=0xbde4, 0xbde7 do
+						mem:write_u8(_addr, 0x00)
+					end
+				end
+			else
+				video.throttle_rate = 1  -- restore emulation to full speed
+			end
+		end
+	end
+
 	function frogr_func()
 		-- No commented rom disassembly available. I worked this one out using MAME debugger.
 		-- Useful map info from MAME Driver:
@@ -99,14 +145,14 @@ function continue.startplugin()
 		--   map(0xa800, 0xabff) is videoram
 		h_mode = read(0x803f) -- 1=not playing, 3=playing game (can mean attract mode too)
 		h_start_lives = read(0x83e4)
-		h_active_lives = read(0x83e5)
+		h_remain_lives = read(0x83e5)
 		b_1p_game = read(0x83fe) == 1
 		b_push_p1 = i_stop and not to_bits(ports[":IN1"]:read())[8]
 		b_reset_tally = h_mode == 1 or i_tally == nil
 		b_show_tally = h_mode == 3 and b_1p_game
-		b_reset_continue = h_mode == 1 or h_active_lives >= 1
+		b_reset_continue = h_mode ~= 3 or h_remain_lives >= 1
+		b_almost_gameover = h_mode == 3 and h_remain_lives == 0 and read(0x8045, 0x3c)  -- death sprite is 0x3c
 
-		b_almost_gameover = h_mode == 3 and h_active_lives == 0 and read(0x8045) == 0x3c -- 0x3c is a death sprite
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
 				i_stop = i_frame + 600
@@ -133,14 +179,14 @@ function continue.startplugin()
 	function invad_func()
 		-- ROM Disassembly at https://computerarcheology.com
 		h_mode = read(0x20ef)  -- 1=game running, 0=demo or splash screens
-		h_active_lives = read(0x21ff)
+		h_remain_lives = read(0x21ff)
 		b_1p_game = read(0x20ce, 0)
 		b_reset_tally = h_mode == 0 or i_tally == nil
 		b_show_tally = h_mode == 1
 		b_push_p1 = i_stop and to_bits(ports[':IN1']:read())[3] == 1
 		-- player was blown up on last life. Animation sprite and timer indicate a specific frame
-		b_almost_gameover = read(0x2015) < 128 and h_active_lives == 0 and read(0x2016) == 1 and read(0x2017) == 1
-		b_reset_continue = mode == 0 or h_active_lives >= 1
+		b_almost_gameover = read(0x2015) < 128 and h_remain_lives == 0 and read(0x2016) == 1 and read(0x2017) == 1
+		b_reset_continue = mode == 0 or h_remain_lives >= 1
 		h_start_lives = 3
 		if to_bits(ports[':IN2']:read())[1] == 1 then h_start_lives = h_start_lives + 1 end  -- dip adjust start lives
 		if to_bits(ports[':IN2']:read())[2] == 1 then h_start_lives = h_start_lives + 1 end  -- dip adjust start lives
@@ -239,12 +285,12 @@ function continue.startplugin()
 		-- ROM disassembly at https://github.com/hackbar/galaga
 		h_mode = read(0x9201)  -- 0=game ended, 1=attract, 2=ready to start, 3=playing
 		h_start_lives = read(0x9982) + 1  --refer file "mrw.s" ram2 0x9800 + offset
-		h_active_lives = read(0x9820)
+		h_remain_lives = read(0x9820)
 		b_1p_game = read(0x99b3, 0)
 		b_reset_tally = h_mode == 2 or i_tally == nil
 		b_show_tally = h_mode == 3
 		b_push_p1 = i_stop and to_bits(ports[':IN1']:read())[3] == 0
-		b_reset_continue = h_mode ~= 3 or h_active_lives >= 1
+		b_reset_continue = h_mode ~= 3 or h_remain_lives >= 1
 
 		-- check video ram for "CAPT" (part of FIGHTER CAPTURED message)
 		_capt = read(0x81f1) == 0xc and read(0x81d1) == 0xa and read(0x81b1) == 0x19 and read(0x8191) == 0x1d
@@ -276,10 +322,10 @@ function continue.startplugin()
 		-- ROM Disassembly at https://computerarcheology.com
 		h_mode = read(0x8075)
 		h_start_lives = read(0x807e)
-		h_active_lives = read(0x80d8)
+		h_remain_lives = read(0x80d8)
 		b_1p_game = read(0x8080, 0)
-		b_almost_gameover = read(0x8073, 0) and h_active_lives == 0
-		b_reset_continue = h_mode == 0 or h_active_lives >= 1
+		b_almost_gameover = read(0x8073, 0) and h_remain_lives == 0
+		b_reset_continue = h_mode == 0 or h_remain_lives >= 1
 		b_show_tally = h_mode == 1
 		b_reset_tally = h_mode == 0 or i_tally == nil
 		b_push_p1 = i_stop and to_bits(read(0xb800))[3] == 1
@@ -311,10 +357,10 @@ function continue.startplugin()
 		-- ROM disassembly at https://github.com/BleuLlama/GameDocs/blob/master/disassemble/mspac.asm
 		h_mode = read(0x4e00)
 		h_start_lives = read(0x4e6f)
-		h_active_lives = read(0x4e14)
+		h_remain_lives = read(0x4e14)
 		b_1p_game = read(0x4e70, 0)
 		b_game_restart = read(0x4e04, 2)
-		b_almost_gameover = h_mode == 3 and h_active_lives == 0 and read(0x4e04,4)
+		b_almost_gameover = h_mode == 3 and h_remain_lives == 0 and read(0x4e04,4)
 		b_reset_continue = read(0x4e03, 3)
 		b_reset_tally = h_mode == 2 or i_tally == nil
 		b_show_tally = h_mode == 3
@@ -356,12 +402,12 @@ function continue.startplugin()
 		-- Rom disassembly at https://github.com/nmikstas/asteroids-disassembly/tree/master/AsteroidsSource
 		h_mode = read(0x21b)
 		h_start_lives = read(0x56)
-		h_active_lives = read(0x57)
+		h_remain_lives = read(0x57)
 		b_1p_game = read(0x1c, 1)
 		b_reset_continue = h_mode == 255
 		b_reset_tally = not b_1p_game or i_tally == nil
 		b_show_tally = b_1p_game
-		b_almost_gameover = h_mode == 160 and h_active_lives == 0
+		b_almost_gameover = h_mode == 160 and h_remain_lives == 0
 		b_push_p1 = i_stop and read(0x2403, 128)
 
 		-- Logic
@@ -396,9 +442,11 @@ function continue.startplugin()
 		if tonumber(emu.app_version()) >= 0.227 then
 			mac = manager.machine
 			ports = mac.ioport.ports
+			video = mac.video
 		elseif tonumber(emu.app_version()) >= 0.196 then
 			mac = manager:machine()
 			ports = mac:ioport().ports
+			video = mac:video()
 		else
 			print("ERROR: The continue plugin requires MAME version 0.196 or greater.")
 		end
@@ -456,30 +504,35 @@ function continue.startplugin()
 		end
 	end
 
-	function draw_progress_bar()
+	function draw_progress_bar(speed_factor)
 		local _y, _x, _scale = rom_data[3][1], rom_data[3][2], rom_data[7]
 		local _cnt = math.floor((i_stop - i_frame) / 6)
 		local _col = rom_data[4]
 
-		if _cnt < 40 and _cnt % 6 >= 3 then _col = RED end
+		if _cnt < 35 / speed_factor and (_cnt % 6 >= 3 or speed_factor > 2) then _col = RED end
 		if rom_data[6] then  -- rotated
-			scr:draw_box(_y-80, _x+(_scale*32), _y-80+_cnt, _x+(_scale*40), _col, _col)
+			scr:draw_box(_y-80, _x+(_scale*32), _y-80+(_cnt*speed_factor), _x+(_scale*40), _col, _col)
 		elseif rom_data[5] then -- flipped
-			scr:draw_box(_y+(_scale*32), _x+112, _y+(_scale*40), _x+112-_cnt, _col, _col)
+			scr:draw_box(_y+(_scale*32), _x+112, _y+(_scale*40), _x+112-(_cnt*speed_factor), _col, _col)
 		else -- normal
-			scr:draw_box(_y+(_scale*8), _x+8, _y+(_scale*16), _x+8+_cnt, _col, _col)
+			scr:draw_box(_y+(_scale*8), _x+8, _y+(_scale*16), _x+8+(_cnt*speed_factor), _col, _col)
 		end
 	end
 
-	function draw_continue_box()
+	function draw_continue_box(speed_factor)
+		_speed = speed_factor or 1
 		local _y, _x, _scale = rom_data[3][1], rom_data[3][2], rom_data[7]
-		scr:draw_box(_y, _x, _y+(48*_scale), _x+120, BLK, BLK)  -- black background
+		if rom_data[6] then
+			scr:draw_box(_y-88, _x, _y+32, _x+(48*_scale), BLK, BLK)  -- rotate black backround
+		else
+			scr:draw_box(_y, _x, _y+(48*_scale), _x+120, BLK, BLK)  -- black background
+		end
 		if rom_data[5] then
 			draw_graphic(message_data, _y+(24*_scale), _x+7)  -- flipped graphics
 		else
 			draw_graphic(message_data, _y+(40*_scale), _x+7)
 		end
-		draw_progress_bar()
+		draw_progress_bar(_speed)
 	end
 
 	function draw_tally(n)
