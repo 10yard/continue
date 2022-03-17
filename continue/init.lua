@@ -107,6 +107,7 @@ function continue.startplugin()
 		b_show_tally = b_1p_game and h_mode == 2
 		b_reset_continue = h_mode ~=2 or h_remain_lives >= 1
 		b_almost_gameover = h_mode == 2 and h_remain_lives == 0 and read(0x9859) == 0x1b  -- 0x1b when player dies
+		if not sound then sound = {} end
 		if b_reset_tally then
 			_attenuation = sound.attenuation
 		end
@@ -125,10 +126,10 @@ function continue.startplugin()
 			if i_stop and i_stop > i_frame then
 				mem:write_u8(0x9848, 0)  -- switch off player collisions while waiting for decision
 				draw_continue_box(6)
-				sound.attenuation = -32
+				if sound then sound.attenuation = -32 end
 				if b_push_p1 then
 					video.throttle_rate = 1  -- restore emulation to full speed
-					sound.attenuation = _attenuation
+					if sound then sound.attenuation = _attenuation end
 					i_tally = i_tally + 1
 					i_stop = nil
 					mem:write_u8(0xbdec, h_start_lives)
@@ -139,7 +140,7 @@ function continue.startplugin()
 				end
 			else
 				video.throttle_rate = 1  -- restore emulation to full speed
-				sound.attenuation = _attenuation
+				if sound then sound.attenuation = _attenuation end
 			end
 		end
 	end
@@ -454,7 +455,6 @@ function continue.startplugin()
 			mac = manager:machine()
 			ports = mac:ioport().ports
 			video = mac:video()
-			sound = mac.sound()
 		else
 			print("ERROR: The continue plugin requires MAME version 0.196 or greater.")
 		end
@@ -463,7 +463,6 @@ function continue.startplugin()
 				scr = mac.screens[":screen"]
 				cpu = mac.devices[":maincpu"]
 				mem = cpu.spaces["program"]
-				snd = mac.sound
 				rom_data = rom_table[emu:romname()]
 				rom_function = _G[rom_data[1]]
 				if rom_data[6] then
