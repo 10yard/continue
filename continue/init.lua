@@ -158,7 +158,14 @@ function continue.startplugin()
 		b_reset_tally = h_mode == 1 or i_tally == nil
 		b_show_tally = h_mode == 3 and b_1p_game
 		b_reset_continue = h_mode ~= 3 or h_remain_lives >= 1
-		b_almost_gameover = h_mode == 3 and h_remain_lives == 0 and read(0x8045, 0x3c)  -- death sprite is 0x3c
+
+		if h_mode == 0 and read(0x83dd, 0) and read(0x83dc) < 10 then
+			-- force death just before timer expiry so we can display the continue message
+			mem:write_u8(0x803f, 3)
+			mem:write_u8(0x8004, 1)
+		end
+
+		b_almost_gameover = h_remain_lives == 0 and  h_mode == 3 and read(0x8045, 0x3c)
 
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
@@ -167,6 +174,7 @@ function continue.startplugin()
 			if i_stop and i_stop > i_frame then
 				cpu.state["H"].value = 255  -- force delay timer to keep running
 				cpu.state["L"].value = 255
+
 				draw_continue_box()
 				if b_push_p1 then
 					i_tally = i_tally + 1
