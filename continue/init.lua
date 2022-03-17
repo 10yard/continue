@@ -62,7 +62,7 @@ function continue.startplugin()
 	rom_table["dkonghrd"]   = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
 	rom_table["dkongf"]     = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
 	rom_table["dkongj"]     = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["asteroid"]   = {"aster_func", {008,008}, {540,240}, WHT, false, true,  3}
+	rom_table["asteroid"]   = {"aster_func", {008,008}, {540,240}, WHT, false, true,  2}
 	rom_table["cclimber"]   = {"climb_func", {009,048}, {156,080}, CYN, true,  true,  1}
 
 	-- encoded message data
@@ -221,12 +221,15 @@ function continue.startplugin()
 					--update score in memory
 					mem:write_u8(0x20f8, 0)
 					mem:write_u8(0x20f9, 0)
-					-- update score on screen - by pushing 0 adjustment
+					-- dummy screen update - by pushing 0 score adjustment
 					mem:write_u8(0x20f1,1)  -- adjust score flag
 					mem:write_u8(0x20f2,0)  -- score adjustment
 				end
 			else
 				mem:write_u8(0x20e9, 1) -- unsuspend game
+				-- dummy screen update - by pushing 0 score adjustment
+				mem:write_u8(0x20f1,1)  -- adjust score flag
+				mem:write_u8(0x20f2,0)  -- score adjustment
 			end
 		end
 	end
