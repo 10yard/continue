@@ -35,7 +35,7 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local rom_function
 	-- supported rom name     function     tally yx    msg yx      col  flip   rotate scale
-	rom_table["qbert"]   =    {"qbert_func", {219,009}, {096,050}, WHT, false, false, 1}
+	rom_table["qbert"]      = {"qbert_func", {217,016}, {104,062}, WHT, false, false, 1}
 	rom_table["robotron"]   = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
 	rom_table["robotrontd"] = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
 	rom_table["robotron12"] = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
@@ -106,22 +106,20 @@ function continue.startplugin()
 		--   5800-5fff i/o ports
 
 		_demo = to_bits(read(0x5800))[4] == 1  -- unlimited lives/demo mode.  Disable continue option
+		h_mode =  read(0x1fee) -- 0xf4=waiting to start, 0x8=level screen
 		h_start_lives = 3
 		h_remain_lives = read(0xd00)
-		b_1p_game = read(0xb2) == 0
-		b_almost_gameover = h_remain_lives == 1 and (read(0x1fed) == 0xbb or read(0x1fed) == 0xbd)
-		b_reset_tally = h_remain_lives == 0 or h_remain_lives > 3 or i_tally == nil
-		b_show_tally = h_remain_lives >= 1 and h_remain_lives <= 3
+		b_1p_game = read(0xb2, 0)
+		_dead = read(0x1fed, 0xbb) or read(0x1fed, 0xbd)
+		b_almost_gameover = h_remain_lives == 1 and _dead and _previously_alive
+		b_reset_tally = h_mode == 0xf4 or i_tally == nil
+		b_show_tally = h_remain_lives >= 1 and h_mode ~= 0x8
 		b_reset_continue = h_remain_lives > 1
 		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[1] == 1
-
-		--if not mac.paused then
-		--	print(h_remain_lives)
-		--	print(cpu.state["CX"].value)
-		--end
+		_previously_alive = not _dead
 
 		-- Logic
-		if b_1p_game then
+		if b_1p_game and not _demo then
 			if b_almost_gameover and not i_stop then
 				i_stop = i_frame + 600
 			end
@@ -131,21 +129,21 @@ function continue.startplugin()
 
 				if b_push_p1 then
 					i_tally = i_tally + 1
-					mem:write_u8(0xd00, h_start_lives)
-					cpu.state["CX"].value = 0
+					mem:write_u8(0xd00, h_start_lives + 1)
 					i_stop = nil
 
 					-- reset score in memory (do we need to clear more bytes?)
 					for _addr=0xbc, 0xc1 do
 						mem:write_u8(_addr, 0)
 					end
-					-- and also here in memory
-					for _addr=0xc6, 0xca do
-						mem:write_u8(_addr, 0x24)
-					end
-					mem:write_u8(0xcb, 0)
-					mem:write_u8(0xcc, 0)
-					mem:write_u8(0xcd, 0)
+
+					-- and also here in memory  -- not needed?
+					--for _addr=0xc6, 0xca do
+					--	mem:write_u8(_addr, 0x24)
+					--end
+					--mem:write_u8(0xcb, 0)
+					--mem:write_u8(0xcc, 0)
+					--mem:write_u8(0xcd, 0)
 
 					-- and also on screen
 					mem:write_u8(0x385c, 0x0)

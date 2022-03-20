@@ -17,6 +17,7 @@ The plugin currently supports these games:
 - Galaga
 - Galaxians
 - Frogger
+- Q*bert
 - Robotron
 - Donkey Kong
 - Donkey Kong Junior
