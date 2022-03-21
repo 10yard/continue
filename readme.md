@@ -17,13 +17,13 @@ The plugin currently supports these games:
 - Galaga
 - Galaxians
 - Frogger
-- Q*bert
 - Robotron
 - Donkey Kong
 - Donkey Kong Junior
 - Asteroids
 - Crazy Climber
 - Space Invaders
+- Q*bert (work in progress)
 
 Other variants of these games are also supported (including):
 - Pac-Man Plus

@@ -124,32 +124,24 @@ function continue.startplugin()
 				i_stop = i_frame + 600
 			end
 			if i_stop and i_stop > i_frame then
-				cpu.state["CX"].value = 10  -- force delay timer to keep running
+				cpu.state["CX"].value = 8  -- force delay timer to keep running
 				draw_continue_box()
 
 				if b_push_p1 then
 					i_tally = i_tally + 1
-					mem:write_u8(0xd00, h_start_lives + 1)
 					i_stop = nil
+					mem:write_u8(0xd00, h_start_lives + 1)
 
 					-- reset score in memory (do we need to clear more bytes?)
-					for _addr=0xbc, 0xc1 do
-						mem:write_u8(_addr, 0)
-					end
+					for _addr=0xbc, 0xc1 do mem:write_u8(_addr, 0) end
 
-					-- and also here in memory  -- not needed?
-					--for _addr=0xc6, 0xca do
-					--	mem:write_u8(_addr, 0x24)
-					--end
-					--mem:write_u8(0xcb, 0)
-					--mem:write_u8(0xcc, 0)
-					--mem:write_u8(0xcd, 0)
+					-- and also here in memory
+					for _addr=0xc6, 0xca do mem:write_u8(_addr, 0x24) end
+					for _addr=0xcb, 0xcd do mem:write_u8(_addr, 0x0) end
 
 					-- and also on screen
 					mem:write_u8(0x385c, 0x0)
-					for _addr=0x387c, 0x397c, 0x20 do
-						mem:write_u8(_addr, 0x24)
-					end
+					for _addr=0x387c, 0x397c, 0x20 do mem:write_u8(_addr, 0x24) end
 				end
 			end
 		end
