@@ -34,8 +34,11 @@ function continue.startplugin()
 	-- compatible roms with associated function and position data
 	local rom_data, rom_table = {}, {}
 	local rom_function
-	-- supported rom name     function     tally yx    msg yx      col  flip   rotate scale
-	rom_table["qbert"]      = {"qbert_func", {217,016}, {104,062}, WHT, false, false, 1}
+	-- supported rom name     function       tally yx    msg yx    col  flip   rotate scale
+	rom_table["missile"]    = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
+	rom_table["suprmatk"]   = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
+	rom_table["qbert"]      = {"qbert_func", {217,016}, {102,060}, WHT, false, false, 1}
+	rom_table["qberta"]     = {"qbert_func", {217,016}, {102,060}, WHT, false, false, 1}
 	rom_table["robotron"]   = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
 	rom_table["robotrontd"] = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
 	rom_table["robotron12"] = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
@@ -56,7 +59,7 @@ function continue.startplugin()
 	rom_table["mspacmat"]   = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
 	rom_table["pacplus"]    = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
 	rom_table["dkong"]      = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongjr"]    = {"dkong_func", {229,154}, {096,050}, YEL, false, false, 1}
+	rom_table["dkongjr"]    = {"dkong_func", {230,154}, {096,050}, YEL, false, false, 1}
 	rom_table["dkongx"]     = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
 	rom_table["dkongx11"]   = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
 	rom_table["dkongpe"]    = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
@@ -65,6 +68,7 @@ function continue.startplugin()
 	rom_table["dkongj"]     = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
 	rom_table["asteroid"]   = {"aster_func", {008,008}, {540,240}, WHT, false, true,  2}
 	rom_table["cclimber"]   = {"climb_func", {009,048}, {156,080}, CYN, true,  true,  1}
+	--rom_table["sinistar"]   = {"snstr_func", {217,016}, {102,060}, WHT, false, false, 1}
 
 	-- encoded message data
 	local message_data = {"6s2S2s4S2S2SSS6Ss2SSSS4S 6S3S6S6", "2S2 2S2 2s2s2S2SSS2S2S3SSSs2s2Ss2S 2 2s2S2S 2s",
@@ -98,39 +102,145 @@ function continue.startplugin()
 	---------------------------------------------------------------------------
 	-- Game specific functions
 	---------------------------------------------------------------------------
+	function missl_func()
+		-- ROM disassembly at https://6502disassembly.com/va-missile-command/
+		h_mode = read(0x93)  -- 0x0=not playing, 0xff=playing
+		h_remain_lives = read(0xc0)  -- remaining cities
+		b_push_p1 = to_bits(ports[":IN0"]:read())[5] == 0
+		b_1p_game = read(0xae, 0)
+		b_reset_tally = h_mode == 0x0 or i_tally == nil
+		b_reset_continue = h_remain_lives > 1
+		b_show_tally = h_mode == 0xff
+		if b_reset_tally or not h_start_lives then
+			h_start_lives = 3 + to_bits(ports[":R8"]:read())[1]*2 + to_bits(ports[":R8"]:read())[2] -- read lives from dips
+			if h_start_lives == 3 then
+				h_start_lives = 7
+			end
+		end
+		b_almost_gameover = b_1p_game and h_mode == 0xff and h_remain_lives == 0
+
+		---- Logic
+		if b_1p_game then
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 170
+				_hide_stop = i_stop + 90  -- hide the playfield during message and for 90 frames after pushing continue
+				video.throttle_rate = 0.35 -- adjust emulation speed to allow more time for decision
+			end
+			if _hide_stop and _hide_stop > i_frame then
+				scr:draw_box(0,8, 256, 232, BLK, BLK)  -- temporarily hide the play field
+			end
+			if i_stop and i_stop > i_frame then
+				draw_continue_box(4)
+				if b_push_p1 then
+					video.throttle_rate = 1  -- restore emulation to full speed
+					i_tally = i_tally + 1
+					mem:write_u8(0xc0, h_start_lives)
+					mem:write_u8(0xcf, 0)
+					i_stop = nil
+					for _add = 0x01d6, 0x01db do  mem:write_u8(_add, 0) end  -- reset score in memory
+					mem:write_u8(0xd4, 0xff)  -- set flag to redraw the score
+				end
+			else
+				video.throttle_rate = 1  -- restore emulation to full speed
+			end
+		end
+	end
+
+	function rbtrn_func()
+		h_mode = read(0x98d1)  -- 0=high score screen, 1=attract mode, 2=playing
+		h_start_lives = 3
+		h_remain_lives = read(0xbdec)
+		b_1p_game = read(0x983f, 1)
+		b_push_p1 = i_stop and to_bits(ports[":IN0"]:read())[5] == 1
+		b_reset_tally = h_mode ~= 2 or i_tally == nil
+		b_show_tally = b_1p_game and h_mode == 2
+		b_reset_continue = h_mode ~=2 or h_remain_lives >= 1
+		b_almost_gameover = h_mode == 2 and h_remain_lives == 0 and read(0x9859) == 0x1b  -- 0x1b when player dies
+		if not sound then sound = {} end
+		if b_reset_tally then
+			_attenuation = sound.attenuation
+		end
+
+		if b_1p_game then
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 90
+				_hide_stop = i_stop + 35  -- hide the playfield during message and for 35 frames after pushing continue
+				video.throttle_rate = 0.2 -- adjust emulation speed to allow more time for decision
+			end
+
+			if _hide_stop and _hide_stop > i_frame then
+				scr:draw_box(8,17, 282, 228, BLK, BLK)  -- temporarily hide the play field
+			end
+
+			if i_stop and i_stop > i_frame then
+				mem:write_u8(0x9848, 0)  -- switch off player collisions while waiting for decision
+				draw_continue_box(6)
+				if sound then sound.attenuation = -32 end
+				if b_push_p1 then
+					video.throttle_rate = 1  -- restore emulation to full speed
+					if sound then sound.attenuation = _attenuation end
+					i_tally = i_tally + 1
+					i_stop = nil
+					mem:write_u8(0xbdec, h_start_lives)
+					-- reset score in memory
+					for _addr=0xbde4, 0xbde7 do
+						mem:write_u8(_addr, 0x00)
+					end
+				end
+			else
+				video.throttle_rate = 1  -- restore emulation to full speed
+				if sound then sound.attenuation = _attenuation end
+			end
+		end
+	end
+
 	function qbert_func()
 		-- No commented rom disassembly available. I worked this one out using MAME debugger.
-		-- Useful map info from MAME Driver:
 		--   0000-1fff RAM
 		--   3800-3fff video RAM
-		--   5800-5fff i/o ports
-
 		_demo = to_bits(read(0x5800))[4] == 1  -- unlimited lives/demo mode.  Disable continue option
-		h_mode =  read(0x1fee) -- 0xf4=waiting to start, 0x8=level screen
+		h_mode =  read(0x1fee) -- 0xf4=waiting to start
 		h_start_lives = 3
 		h_remain_lives = read(0xd00)
 		b_1p_game = read(0xb2, 0)
 		_dead = read(0x1fed, 0xbb) or read(0x1fed, 0xbd)
 		b_almost_gameover = h_remain_lives == 1 and _dead and _previously_alive
 		b_reset_tally = h_mode == 0xf4 or i_tally == nil
-		b_show_tally = h_remain_lives >= 1 and h_mode ~= 0x8
+		b_show_tally = h_remain_lives >= 1 and h_mode ~=0xf4 and read(0x3da3) ~= 0xa5  --0xa5 is a tile on level screen
 		b_reset_continue = h_remain_lives > 1
 		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[1] == 1
 		_previously_alive = not _dead
 
 		-- Logic
 		if b_1p_game and not _demo then
+			-- redraw lives as game does not refresh them
+			if b_show_tally then
+				for _k, _v in ipairs({0x3835, 0x3833, 0x3831}) do
+					if _k < h_remain_lives then
+						mem:write_u8(_v, 0xac)
+						mem:write_u8(_v+1, 0xad)
+					else
+						mem:write_u8(_v, 0x24)
+						mem:write_u8(_v+1, 0x24)
+					end
+				end
+			end
+
 			if b_almost_gameover and not i_stop then
 				i_stop = i_frame + 600
 			end
 			if i_stop and i_stop > i_frame then
-				cpu.state["CX"].value = 8  -- force delay timer to keep running
+				cpu.state["CX"].value = 5  -- force delay timer to keep running
 				draw_continue_box()
 
 				if b_push_p1 then
 					i_tally = i_tally + 1
 					i_stop = nil
 					mem:write_u8(0xd00, h_start_lives + 1)
+
+					--reset this counter - to fix a glitch wih blank lines being written to screen.  Assume these
+					--blank lines were removing the lives from screen.`
+					mem:write_u8(0xd24, 0x30)
 
 					-- reset score in memory (do we need to clear more bytes?)
 					for _addr=0xbc, 0xc1 do mem:write_u8(_addr, 0) end
@@ -338,54 +448,6 @@ function continue.startplugin()
 		end
 	end
 
-	function rbtrn_func()
-		h_mode = read(0x98d1)  -- 0=high score screen, 1=attract mode, 2=playing
-		h_start_lives = 3
-		h_remain_lives = read(0xbdec)
-		b_1p_game = read(0x983f, 1)
-		b_push_p1 = i_stop and to_bits(ports[":IN0"]:read())[5] == 1
-		b_reset_tally = h_mode ~= 2 or i_tally == nil
-		b_show_tally = b_1p_game and h_mode == 2
-		b_reset_continue = h_mode ~=2 or h_remain_lives >= 1
-		b_almost_gameover = h_mode == 2 and h_remain_lives == 0 and read(0x9859) == 0x1b  -- 0x1b when player dies
-		if not sound then sound = {} end
-		if b_reset_tally then
-			_attenuation = sound.attenuation
-		end
-
-		if b_1p_game then
-			if b_almost_gameover and not i_stop then
-				i_stop = i_frame + 90
-				_hide_stop = i_stop + 35  -- hide the playfield during message and for 35 frames after pushing continue
-				video.throttle_rate = 0.2 -- adjust emulation speed to allow more time for decision
-			end
-
-			if _hide_stop and _hide_stop > i_frame then
-				scr:draw_box(8,17, 282, 228, BLK, BLK)  -- temporarily hide the play field
-			end
-
-			if i_stop and i_stop > i_frame then
-				mem:write_u8(0x9848, 0)  -- switch off player collisions while waiting for decision
-				draw_continue_box(6)
-				if sound then sound.attenuation = -32 end
-				if b_push_p1 then
-					video.throttle_rate = 1  -- restore emulation to full speed
-					if sound then sound.attenuation = _attenuation end
-					i_tally = i_tally + 1
-					i_stop = nil
-					mem:write_u8(0xbdec, h_start_lives)
-					-- reset score in memory
-					for _addr=0xbde4, 0xbde7 do
-						mem:write_u8(_addr, 0x00)
-					end
-				end
-			else
-				video.throttle_rate = 1  -- restore emulation to full speed
-				if sound then sound.attenuation = _attenuation end
-			end
-		end
-	end
-
 	function climb_func()
 		-- ROM Disassembly at https://computerarcheology.com
 		h_mode = read(0x8075)
@@ -503,6 +565,33 @@ function continue.startplugin()
 		end
 	end
 
+	--function snstr_func()
+	--	-- WORK IN PROGRESS
+	--	-- No commented rom disassembly available. I worked this one out using MAME debugger.
+	--	-- Useful map info from MAME Driver:
+	--	--   0000-8fff Video RAM
+    --	--   9800-bfff RAM
+	--	h_start_lives = 3
+	--	h_remain_lives = read(0x9ffc)
+	--
+	--	i_stop = true
+	--	b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[5] == 1
+	--	if b_push_p1 then
+	--		-- search for 2450
+	--		for _addr=0x0000, 0xbfff do
+	--			if read(_addr, 0) and read(_addr+1, 5) and read(_addr+2, 4) and read(_addr+3, 2) then
+	--				print(string.format("%x",_addr))
+	--			end
+	--		end
+	--
+	--		-- reset score in memory
+	--		--for _addr=0xa004, 0xa009 do mem:write_u8(_addr, 0x00) end
+	--		-- reset score in video ram
+	--		--for _addr=0x9ffd, 0xa000 do mem:write_u8(_addr, 0x00) end
+	--
+	--	end
+	--end
+
 	---------------------------------------------------------------------------
 	-- Plugin functions
 	---------------------------------------------------------------------------
@@ -608,13 +697,15 @@ function continue.startplugin()
 		-- chalk up the number of continues
 		local _col, _y, _x
 		local _cols = { WHT, CYN }
+		_y, _x = rom_data[2][1], rom_data[2][2]
 		for _i=0, n - 1 do
 			_col = _cols[((math.floor(_i / 5)) % 2) + 1]
-			_y, _x = rom_data[2][1], rom_data[2][2]
 			if rom_data[5] and not rom_data[6] then
-				scr:draw_box(_y, _x-(_i*4), _y+(4*rom_data[7]), _x+2-(_i*4), _col ,_col)  --flipped graphics
+				scr:draw_box(_y-1, _x-(_i*4)-1, _y+(4*rom_data[7])+1, _x+2-(_i*4)+1, BLK ,BLK)  -- black background
+				scr:draw_box(_y, _x-(_i*4), _y+(4*rom_data[7]), _x+2-(_i*4), _col ,_col)  --flipped
 			else
-				scr:draw_box(_y, _x+(_i*4), _y+(4*rom_data[7]), _x+2+(_i*4), _col ,_col)
+				scr:draw_box(_y-1, _x+(_i*4)-1, _y+(4*rom_data[7])+1, _x+2+(_i*4)+1, BLK ,BLK) -- black background
+				scr:draw_box(_y, _x+(_i*4), _y+(4*rom_data[7]), _x+2+(_i*4), _col ,_col) -- regular
 			end
 		end
 	end

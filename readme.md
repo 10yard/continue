@@ -17,18 +17,20 @@ The plugin currently supports these games:
 - Galaga
 - Galaxians
 - Frogger
+- Q*bert
 - Robotron
 - Donkey Kong
 - Donkey Kong Junior
+- Missile Command
 - Asteroids
 - Crazy Climber
 - Space Invaders
-- Q*bert (work in progress)
 
 Other variants of these games are also supported (including):
 - Pac-Man Plus
 - Ms. Pac-Man Attack
 - Pac-Man and Ms. Pac-Man Speed Up Hacks
+- Super Missile Attack
 - Galaga Fast Shoot Hack
 - Super Galaxians
 - Moon Alien
@@ -61,15 +63,17 @@ Sean Riddle for Galaxians and Robotron ROM disassembly resources at:
 Kef Schecter (furrykey) for Donkey Kong ROM disassembly resources at:
 - https://github.com/furrykef/dkdasm/blob/master/dkong.asm
 
-Rich McFerron for Space Invaders and Crazy Climber ROM disassembly resources at
+Rich McFerron for Space Invaders and Crazy Climber ROM disassembly resources at:
 - https://computerarcheology.com/Arcade/
 
 nmikstas for Asteroids ROM disassembly resources at:
 - https://github.com/nmikstas/asteroids-disassembly/tree/master/AsteroidsSource
 
-hackbar and neiderm for Galaga ROM disassembly resources at
+hackbar and neiderm for Galaga ROM disassembly resources at:
 - https://github.com/hackbar/galaga
 
+Andy McFadden for Missile Command ROM disassembly resources at:
+- https://6502disassembly.com/va-missile-command/
 
 ## What's next
 
