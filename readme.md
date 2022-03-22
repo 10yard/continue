@@ -23,6 +23,7 @@ The plugin currently supports these games:
 - Donkey Kong Junior
 - Missile Command
 - Centipede
+- Battlezone
 - Asteroids
 - Crazy Climber
 - Space Invaders

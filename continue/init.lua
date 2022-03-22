@@ -35,7 +35,8 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local rom_function
 	-- supported rom name     function       tally yx    msg yx    col  flip   rotate scale
-	rom_table["centiped"]   = {"centi_func", {217,016}, {102,060}, WHT, false,  false,  1}
+	rom_table["bzone"]      = {"bzone_func", {008,008}, {360,160}, WHT, true,  true,  2}
+	rom_table["centiped"]   = {"centi_func", {217,016}, {102,060}, WHT, false, false, 1}
 	rom_table["missile"]    = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
 	rom_table["suprmatk"]   = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
 	rom_table["qbert"]      = {"qbert_func", {217,016}, {102,060}, WHT, false, false, 1}
@@ -103,13 +104,43 @@ function continue.startplugin()
 	---------------------------------------------------------------------------
 	-- Game specific functions
 	---------------------------------------------------------------------------
+	function bzone_func()
+		-- ROM disassembly at https://6502disassembly.com/va-battlezone/
+		h_mode = read(0xce) -- 0x0=not playing, 0xff=playing
+		h_remain_lives = read(0xcc)
+		h_start_lives = (to_bits(ports[":DSW0"]:read())[1] + to_bits(ports[":DSW0"]:read())[2]*2) + 2 -- lives from dips
+		b_push_p1 = i_stop and to_bits(ports[":IN3"]:read())[6] == 1
+		b_1p_game = true
+		b_show_tally = h_mode == 0xff
+		b_reset_tally = h_mode == 0x0 or i_tally == nil
+		b_reset_continue = h_remain_lives > 1
+		b_almost_gameover = b_1p_game and h_mode == 0xff and h_remain_lives == 0 and not read(0xcd, 0)
+		if b_1p_game then
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 600
+			end
+			if i_stop and i_stop > i_frame then
+				mem:write_u8(0xc7, 30)  -- suspend game
+				draw_continue_box()
+				if b_push_p1 then
+					i_tally = i_tally + 1
+					mem:write_u8(0xcc, h_start_lives)
+					mem:write_u8(0xcd, 0)  -- set alive flag
+					i_stop = nil
+					-- reset score in memory
+					for _addr=0xb8, 0xb9 do	mem:write_u8(_addr, 0) end
+				end
+			end
+		end
+	end
+
 	function centi_func()
 		-- ROM disassembly at https://6502disassembly.com/va-centipede/
 		h_mode = read(0x86) -- 0xff=attract mode
 		h_start_lives = read(0xa4)
 		h_remain_lives = read(0xa5)
 		b_1p_game = read(0x89, 1)
-		b_push_p1 = to_bits(ports[":IN1"]:read())[1] == 0
+		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[1] == 0
 		b_show_tally = h_mode ~= 0xff
 		b_reset_tally = h_mode == 0x0 or i_tally == nil
 		b_reset_continue = h_remain_lives > 1
@@ -126,10 +157,7 @@ function continue.startplugin()
 					i_tally = i_tally + 1
 					mem:write_u8(0xa5, h_start_lives)
 					i_stop = nil
-					-- reset score in memory
-					for _addr=0xa8, 0xad do
-						mem:write_u8(_addr, 0)
-					end
+					for _addr=0xa8, 0xad do mem:write_u8(_addr, 0) end -- reset score in memory
 				end
 			end
 		end
@@ -139,7 +167,7 @@ function continue.startplugin()
 		-- ROM disassembly at https://6502disassembly.com/va-missile-command/
 		h_mode = read(0x93)  -- 0x0=not playing, 0xff=playing
 		h_remain_lives = read(0xc0)  -- remaining cities
-		b_push_p1 = to_bits(ports[":IN0"]:read())[5] == 0
+		b_push_p1 = i_stop and to_bits(ports[":IN0"]:read())[5] == 0
 		b_1p_game = read(0xae, 0)
 		b_reset_tally = h_mode == 0x0 or i_tally == nil
 		b_reset_continue = h_remain_lives > 1
@@ -215,10 +243,7 @@ function continue.startplugin()
 					i_tally = i_tally + 1
 					i_stop = nil
 					mem:write_u8(0xbdec, h_start_lives)
-					-- reset score in memory
-					for _addr=0xbde4, 0xbde7 do
-						mem:write_u8(_addr, 0x00)
-					end
+					for _addr=0xbde4, 0xbde7 do mem:write_u8(_addr, 0x00) end  -- reset score in memory
 				end
 			else
 				video.throttle_rate = 1  -- restore emulation to full speed
