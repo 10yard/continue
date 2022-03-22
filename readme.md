@@ -7,7 +7,7 @@ The continue option will appear before your game is over with a 10 second countd
 A tally of the number of continues made will appear at the top of the screen.
 
 
-![Continue Plugin Screenshot](https://i.imgur.com/ihNmo1y.png)
+![Continue Plugin Screenshot](https://i.imgur.com/boLrqHc.png)
 
 
 The plugin currently supports these games:
@@ -53,6 +53,9 @@ The Plugin is run by adding `-plugin continue` to your MAME arguments e.g.
 
 
 ## Thanks to
+
+The MAMEdev team 
+- https://docs.mamedev.org/
 
 Scott Lawrence (BleuLlama) for Pac-Man/Ms.Pac-Man ROM Disassembly resources at:
 - https://github.com/BleuLlama/GameDocs/blob/master/disassemble/mspac.asm
