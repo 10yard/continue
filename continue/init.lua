@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------------------
 local exports = {}
 exports.name = "continue"
-exports.version = "0.15"
+exports.version = "0.16"
 exports.description = "Continue plugin"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -35,6 +35,7 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local rom_function
 	-- supported rom name     function       tally yx    msg yx    col  flip   rotate scale
+	rom_table["centiped"]   = {"centi_func", {217,016}, {102,060}, WHT, false,  false,  1}
 	rom_table["missile"]    = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
 	rom_table["suprmatk"]   = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
 	rom_table["qbert"]      = {"qbert_func", {217,016}, {102,060}, WHT, false, false, 1}
@@ -102,6 +103,38 @@ function continue.startplugin()
 	---------------------------------------------------------------------------
 	-- Game specific functions
 	---------------------------------------------------------------------------
+	function centi_func()
+		-- ROM disassembly at https://6502disassembly.com/va-centipede/
+		h_mode = read(0x86) -- 0xff=attract mode
+		h_start_lives = read(0xa4)
+		h_remain_lives = read(0xa5)
+		b_1p_game = read(0x89, 1)
+		b_push_p1 = to_bits(ports[":IN1"]:read())[1] == 0
+		b_show_tally = h_mode ~= 0xff
+		b_reset_tally = h_mode == 0x0 or i_tally == nil
+		b_reset_continue = h_remain_lives > 1
+		b_almost_gameover = b_1p_game and h_mode == 0x0 and h_remain_lives == 0 and read(0xb7, 10)
+
+		if b_1p_game then
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 600
+			end
+			if i_stop and i_stop > i_frame then
+				mem:write_u8(0x87, 10)  -- suspend game
+				draw_continue_box()
+				if b_push_p1 then
+					i_tally = i_tally + 1
+					mem:write_u8(0xa5, h_start_lives)
+					i_stop = nil
+					-- reset score in memory
+					for _addr=0xa8, 0xad do
+						mem:write_u8(_addr, 0)
+					end
+				end
+			end
+		end
+	end
+
 	function missl_func()
 		-- ROM disassembly at https://6502disassembly.com/va-missile-command/
 		h_mode = read(0x93)  -- 0x0=not playing, 0xff=playing
