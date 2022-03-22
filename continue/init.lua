@@ -204,13 +204,12 @@ function continue.startplugin()
 		h_remain_lives = read(0xd00)
 		b_1p_game = read(0xb2, 0)
 		_dead = read(0x1fed, 0xbb) or read(0x1fed, 0xbd)
+		if _dead then _dead_count = _dead_count + 1 else _dead_count = 0 end -- count the dead status flag
 		b_almost_gameover = h_remain_lives == 1 and _dead and _dead_count == 50 -- react to dead status at 50 ticks
 		b_reset_tally = h_mode == 0xf4 or i_tally == nil
 		b_show_tally = h_remain_lives >= 1 and h_mode ~=0xf4 and read(0x3da3) ~= 0xa5  --0xa5 is a tile on level screen
 		b_reset_continue = h_remain_lives > 1
 		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[1] == 1
-		-- count the dead status flag and react when it hits 50
-		if _dead then _dead_count = _dead_count + 1 else _dead_count = 0 end
 
 		-- Logic
 		if b_1p_game and not _demo then
