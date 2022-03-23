@@ -77,7 +77,7 @@ nmikstas for Asteroids ROM disassembly resources at:
 hackbar and neiderm for Galaga ROM disassembly resources at:
 - https://github.com/hackbar/galaga
 
-Andy McFadden for Missile Command and Centipede ROM disassembly resources at:
+Andy McFadden for Missile Command, Centipede and Battlezone ROM disassembly resources at:
 - https://6502disassembly.com/va-missile-command/
 
 ## What's next
