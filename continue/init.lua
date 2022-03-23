@@ -36,80 +36,74 @@ function continue.startplugin()
 	local r_function, r_tally_yx, r_yx, r_color, r_flip, r_rotate, r_scale, r_tally_colors
 	-- supported rom name     function       tally yx    msg yx    col  flip   rotate scale
 	rom_table["bzone"]      = {"bzone_func", {008,008}, {320,160}, WHT, true,  true,  1}
-	rom_table["centiped"]   = {"centi_func", {217,016}, {102,060}, WHT, false, false, 1}
-	rom_table["missile"]    = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
+	rom_table["centiped"]   = {"centi_func", {217,016}, {102,054}, GRN, false, false, 1}
+	rom_table["missile"]    = {"missl_func", {001,001}, {164,080}, WHT, true,  true,  1}
 	rom_table["suprmatk"]   = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
-	rom_table["qbert"]      = {"qbert_func", {217,016}, {102,060}, WHT, false, false, 1}
-	rom_table["qberta"]     = {"qbert_func", {217,016}, {102,060}, WHT, false, false, 1}
+	rom_table["qbert"]      = {"qbert_func", {217,016}, {102,053}, WHT, false, false, 1}
+	rom_table["qberta"]     = {"qbert_func", {217,016}, {102,053}, WHT, false, false, 1}
 	rom_table["robotron"]   = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
 	rom_table["robotrontd"] = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
 	rom_table["robotron12"] = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
 	rom_table["robotronyo"] = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
 	rom_table["robotron87"] = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
-	rom_table["frogger"]    = {"frogr_func", {052,219}, {336,050}, WHT, true,  false, 3}
-	rom_table["invaders"]   = {"invad_func", {237,009}, {102,050}, GRN, false, false, 1}
-	rom_table["galaga"]     = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
-	rom_table["galagamf"]   = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
-	rom_table["galagamk"]   = {"galag_func", {016,219}, {102,050}, WHT, true,  false, 1}
-	rom_table["galaxian"]   = {"galax_func", {052,216}, {328,052}, WHT, true,  false, 3}
-	rom_table["superg"]     = {"galax_func", {052,216}, {328,052}, WHT, true,  false, 3}
-	rom_table["moonaln"]    = {"galax_func", {052,216}, {328,052}, WHT, true,  false, 3}
-	rom_table["pacman"]     = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["pacmanf"]    = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["mspacman"]   = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["mspacmnf"]   = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["mspacmat"]   = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["pacplus"]    = {"pacmn_func", {018,216}, {120,050}, WHT, true,  false, 1}
-	rom_table["dkong"]      = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongjr"]    = {"dkong_func", {230,154}, {096,050}, YEL, false, false, 1}
-	rom_table["dkongx"]     = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongx11"]   = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongpe"]    = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkonghrd"]   = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongf"]     = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
-	rom_table["dkongj"]     = {"dkong_func", {219,009}, {096,050}, CYN, false, false, 1}
+	rom_table["frogger"]    = {"frogr_func", {052,219}, {336,032}, WHT, true,  false, 3}
+	rom_table["invaders"]   = {"invad_func", {237,009}, {102,054}, GRN, false, false, 1}
+	rom_table["galaga"]     = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
+	rom_table["galagamf"]   = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
+	rom_table["galagamk"]   = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
+	rom_table["galaxian"]   = {"galax_func", {052,216}, {328,032}, WHT, true,  false, 3}
+	rom_table["superg"]     = {"galax_func", {052,216}, {328,032}, WHT, true,  false, 3}
+	rom_table["moonaln"]    = {"galax_func", {052,216}, {328,032}, WHT, true,  false, 3}
+	rom_table["pacman"]     = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["pacmanf"]    = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["mspacman"]   = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["mspacmnf"]   = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["mspacmat"]   = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["pacplus"]    = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["dkong"]      = {"dkong_func", {219,009}, {096,044}, CYN, false, false, 1}
+	rom_table["dkongjr"]    = {"dkong_func", {230,154}, {096,044}, YEL, false, false, 1}
+	rom_table["dkongx"]     = {"dkong_func", {219,009}, {096,044}, CYN, false, false, 1}
+	rom_table["dkongx11"]   = {"dkong_func", {219,009}, {096,044}, CYN, false, false, 1}
+	rom_table["dkongpe"]    = {"dkong_func", {219,009}, {096,044}, CYN, false, false, 1}
+	rom_table["dkonghrd"]   = {"dkong_func", {219,009}, {096,044}, CYN, false, false, 1}
+	rom_table["dkongf"]     = {"dkong_func", {219,009}, {096,044}, CYN, false, false, 1}
+	rom_table["dkongj"]     = {"dkong_func", {219,009}, {096,044}, CYN, false, false, 1}
 	rom_table["asteroid"]   = {"aster_func", {008,008}, {540,240}, WHT, false, true,  2}
 	rom_table["cclimber"]   = {"climb_func", {010,049}, {156,080}, CYN, true,  true,  1}
 	--rom_table["sinistar"]   = {"snstr_func", {217,016}, {102,060}, WHT, false, false, 1}
 
 	-- encoded message data
-	message_data = {"*","*","*","*","*","*","*","*","8!!!!!!2!!3!!2!!!!3!!3!!9!!!!!!5!!93!!!!4!!!!!!3!!!3!!!!!!3!!!!!!8",
-		"8!!3!!1!!3!!1!!2!!2!!3!!9!!3!!3!!!92!!2!!5!!4!!1!!2!!3!!4!!91","8!!3!!1!!3!!1!!6!!3!!9!!3!!4!!92!!9!!3!!3!!1!!3!!4!!91",
-		"8!!3!!1!!3!!2!!!!!2!!!!!!!9!!3!!4!!93!!!!!5!!3!!3!!1!!2!!!4!!91","8!!!!!!2!!3!!6!!1!!3!!9!!!!!!5!!97!!4!!3!!!!!!!1!!!!!6!!91",
-		"8!!6!!3!!1!!3!!1!!3!!9!!9!!92!!3!!4!!3!!3!!1!!1!!!5!!91","8!!7!!!!!3!!!!!2!!3!!9!!7!!!!!!91!!!!!5!!3!!3!!1!!2!!!4!!91", "*",
-		"98!!!!!!2!!!!!93!!!!3!!!!!2!!3!!2!!!!!!2!!!!!!1!!3!!1!!3!!1!!!!!!!97","991!!3!!3!!91!!2!!1!!3!!1!!!2!!4!!6!!3!!!2!!1!!3!!1!!993",
-		"991!!3!!3!!9!!6!!3!!1!!!!1!!4!!6!!3!!!!1!!1!!3!!1!!993","991!!3!!3!!9!!6!!3!!1!!!!!!!4!!6!!3!!!!!!!1!!3!!1!!!!!!98",
-		"991!!3!!3!!9!!6!!3!!1!!1!!!!4!!6!!3!!1!!!!1!!3!!1!!993","991!!3!!3!!91!!2!!1!!3!!1!!2!!!4!!6!!3!!2!!!1!!3!!1!!993",
-		"991!!4!!!!!93!!!!3!!!!!2!!3!!4!!4!!!!!!1!!3!!2!!!!!2!!!!!!!97","*","*","*","*","*","*","*","*","*",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYZaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz8",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYZaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz8",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYZaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz8",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYZaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz8",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYZaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz8",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYZaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz8",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYZaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz8",
+	message_data = {"*","*","*","*","*","*","*","*","8@@@2@3@2@@3@3@9@@@5@93@@4@@@3@!3@@@3@@@8","8@3@1@3@1@2@2@3@9@3@3@!92@2@5@4@1@2@3@4@91",
+		"8@3@1@3@1@6@3@9@3@4@92@9@3@3@1@3@4@91","8@3@1@3@2@@!2@@@!9@3@4@93@@!5@3@3@1@2@!4@91","8@@@2@3@6@1@3@9@@@5@97@4@3@@@!1@@!6@91",
+		"8@6@3@1@3@1@3@9@9@92@3@4@3@3@1@1@!5@91","8@7@@!3@@!2@3@9@7@@@91@@!5@3@3@1@2@!4@91","*","98@@@2@@!93@@3@@!2@3@2@@@2@@@1@3@1@3@1@@@!97",
+		"991@3@3@91@2@1@3@1@!2@4@6@3@!2@1@3@1@993","991@3@3@9@6@3@1@@1@4@6@3@@1@1@3@1@993","991@3@3@9@6@3@1@@@!4@6@3@@@!1@3@1@@@98",
+		"991@3@3@9@6@3@1@1@@4@6@3@1@@1@3@1@993","991@3@3@91@2@1@3@1@2@!4@6@3@2@!1@3@1@993","991@4@@!93@@3@@!2@3@4@4@@@1@3@2@@!2@@@!97",
+		"*","*","*","*","*","*","*","*","*",
+		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
+		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
+		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
+		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
+		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
+		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
+		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
 		"*","*","*","*","*","*","*","*","*"};
 
-	message_data_rotated = {"+","+","+","+","+","+","+","+","9AAAAAAA97!!!!!!!8","9AAAAAAA97!!!!!!!8","9BBBBBBB99!3!8",
-		"9BBBBBBB99!3!8","9CCCCCCC99!3!8","9CCCCCCC99!!!!!8","9DDDDDDD991!!!9","9DDDDDDD9994","9EEEEEEE98!!!!!!8",
-		"9EEEEEEE95!1!!!!!!!8","9FFFFFFF95!1!95","9FFFFFFF8!!!!!!!1!95","9GGGGGGG8!!!!!!!1!95","9GGGGGGG95!1!!!!!!!8",
-		"9HHHHHHH95!2!!!!!!8","9HHHHHHH9994","9IIIIIII9!!!!!3!2!!9","9IIIIIII8!!!!!!!1!!1!!!!8","9JJJJJJJ8!5!1!2!2!8",
-		"9JJJJJJJ8!5!1!2!2!8","9KKKKKKK8!5!1!2!1!!8","9KKKKKKK8!!!!!!!1!!!!1!9","9LLLLLLL9!!!!!3!!93","9LLLLLLL9994",
-		"9MMMMMMM97!!!!!!!8","9MMMMMMM97!!!!!!!8","9NNNNNNN991!92","9NNNNNNN991!92","9OOOOOOO991!92","9OOOOOOO97!!!!!!!8",
-		"9PPPPPPP97!!!!!!!8","9PPPPPPP9994","9QQQQQQQ91!!!99","9QQQQQQQ9!!!!!98","9RRRRRRR8!!3!!97","9RRRRRRR8!5!97",
-		"9SSSSSSS8!5!97","9SSSSSSS8!!3!!97","9TTTTTTT9!3!98","9TTTTTTT9994","9UUUUUUU9!!!!!2!!!!!!!8","9UUUUUUU8!!!!!!!1!!!!!!!8",
-		"9VVVVVVV8!5!3!3!8","9VVVVVVV8!5!3!3!8","9WWWWWWW8!5!3!3!8","9WWWWWWW8!!!!!!!3!!!!!8","9XXXXXXX9!!!!!5!!!9",
-		"9XXXXXXX9994","9YYYYYYY8!!!!!!!97","9YYYYYYY8!!!!!!!1!95","9aaaaaaa92!!!2!4!9","9aaaaaaa91!!!3!!!!!!!8",
-		"9bbbbbbb9!!!4!!!!!!!8","9bbbbbbb8!!!!!!!1!95","9ccccccc8!!!!!!!1!95","9ccccccc9994","9ddddddd9994","9ddddddd95!97",
-		"9eeeeeee95!97","9eeeeeee8!!!!!!!97","9fffffff8!!!!!!!97","9fffffff95!97","9ggggggg95!97","9ggggggg9994","9hhhhhhh98!2!!9",
-		"9hhhhhhh8!5!1!!1!!!!8","9iiiiiii8!5!1!2!2!8","9iiiiiii8!!!!!!!1!2!2!8","9jjjjjjj8!!!!!!!1!2!1!!8","9jjjjjjj8!5!1!!!!1!9",
-		"9kkkkkkk8!5!2!!93","9kkkkkkk9994","9lllllll8!!!!!!!97","9lllllll8!!!!!!!7!8","9mmmmmmm92!!!8!8","9mmmmmmm91!!!3!!!!!!!8",
-		"9nnnnnnn9!!!4!!!!!!!8","9nnnnnnn8!!!!!!!7!8","9ooooooo8!!!!!!!7!8","9ooooooo9994","9ppppppp9!!!!!!1!!!!!91",
-		"9ppppppp8!!!!!!!1!!!!!!9","9qqqqqqq8!9!2!!8","9qqqqqqq8!9!3!8","9rrrrrrr8!9!2!!8","9rrrrrrr8!!!!!!!1!!!!!!9",
-		"9sssssss9!!!!!!1!!!!!91","9sssssss9994","9ttttttt8!!!!!!!1!!!!!!!8","9ttttttt8!!!!!!!1!!!!!!!8","9uuuuuuu8!2!2!3!3!8",
-		"9uuuuuuu8!2!2!2!!3!8","9vvvvvvv8!2!2!1!!!!2!8","9vvvvvvv8!2!2!1!!1!!!!8","9wwwwwww8!5!1!2!!!9","9wwwwwww9994",
-		"9wwwwwww9994","9xxxxxxx994!8","9xxxxxxx994!8","9xxxxxxx97!!!!!!!8","9yyyyyyy97!!!!!!!8","9yyyyyyy994!8","9yyyyyy995!8",
-		"+","+","+","+","+","+","+","+"}
+	message_data_rotated = {"+","+","+","+","+","+","+","+","9AAAAAAA97@@@!8","9AAAAAAA97@@@!8","9BBBBBBB99!3!8","9BBBBBBB99!3!8",
+		"9CCCCCCC99!3!8","9CCCCCCC99@@!8","9DDDDDDD991@!9","9DDDDDDD9994","9EEEEEEE98@@@8","9EEEEEEE95!1@@@!8","9FFFFFFF95!1!95",
+		"9FFFFFFF8@@@!1!95","9GGGGGGG8@@@!1!95","9GGGGGGG95!1@@@!8","9HHHHHHH95!2@@@8","9HHHHHHH9994","9IIIIIII9@@!3!2@9","9IIIIIII8@@@!1@1@@8",
+		"9JJJJJJJ8!5!1!2!2!8","9JJJJJJJ8!5!1!2!2!8","9KKKKKKK8!5!1!2!1@8","9KKKKKKK8@@@!1@@1!9","9LLLLLLL9@@!3@93","9LLLLLLL9994",
+		"9MMMMMMM97@@@!8","9MMMMMMM97@@@!8","9NNNNNNN991!92","9NNNNNNN991!92","9OOOOOOO991!92","9OOOOOOO97@@@!8","9PPPPPPP97@@@!8",
+		"9PPPPPPP9994","9QQQQQQQ91@!99","9QQQQQQQ9@@!98","9RRRRRRR8@3@97","9RRRRRRR8!5!97","9SSSSSSS8!5!97","9SSSSSSS8@3@97","9TTTTTTT9!3!98",
+		"9TTTTTTT9994","9UUUUUUU9@@!2@@@!8","9UUUUUUU8@@@!1@@@!8","9VVVVVVV8!5!3!3!8","9VVVVVVV8!5!3!3!8","9WWWWWWW8!5!3!3!8",
+		"9WWWWWWW8@@@!3@@!8","9XXXXXXX9@@!5@!9","9XXXXXXX9994","9YYYYYYY8@@@!97","9YYYYYYY8@@@!1!95","9aaaaaaa92@!2!4!9","9aaaaaaa91@!3@@@!8",
+		"9bbbbbbb9@!4@@@!8","9bbbbbbb8@@@!1!95","9ccccccc8@@@!1!95","9ccccccc9994","9ddddddd9994","9ddddddd95!97","9eeeeeee95!97",
+		"9eeeeeee8@@@!97","9fffffff8@@@!97","9fffffff95!97","9ggggggg95!97","9ggggggg9994","9hhhhhhh98!2@9","9hhhhhhh8!5!1@1@@8",
+		"9iiiiiii8!5!1!2!2!8","9iiiiiii8@@@!1!2!2!8","9jjjjjjj8@@@!1!2!1@8","9jjjjjjj8!5!1@@1!9","9kkkkkkk8!5!2@93","9kkkkkkk9994",
+		"9lllllll8@@@!97","9lllllll8@@@!7!8","9mmmmmmm92@!8!8","9mmmmmmm91@!3@@@!8","9nnnnnnn9@!4@@@!8","9nnnnnnn8@@@!7!8","9ooooooo8@@@!7!8",
+		"9ooooooo9994","9ppppppp9@@@1@@!91","9ppppppp8@@@!1@@@9","9qqqqqqq8!9!2@8","9qqqqqqq8!9!3!8","9rrrrrrr8!9!2@8","9rrrrrrr8@@@!1@@@9",
+		"9sssssss9@@@1@@!91","9sssssss9994","9ttttttt8@@@!1@@@!8","9ttttttt8@@@!1@@@!8","9uuuuuuu8!2!2!3!3!8","9uuuuuuu8!2!2!2@3!8",
+		"9vvvvvvv8!2!2!1@@2!8","9vvvvvvv8!2!2!1@1@@8","9wwwwwww8!5!1!2@!9","9wwwwwww9994","9wwwwwww9994","9xxxxxxx994!8","9xxxxxxx994!8",
+		"9xxxxxxx97@@@!8","9yyyyyyy97@@@!8","9yyyyyyy994!8","9yyyyyy995!8","+","+","+","+","+","+","+","+"}
 
 	---------------------------------------------------------------------------
 	-- Game specific functions
@@ -130,9 +124,14 @@ function continue.startplugin()
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
 				i_stop = i_frame + 600
+				_enemy = {read(0x2f), read(0x30), read(0x33), read(0x34)}
 			end
 			if i_stop and i_stop > i_frame then
 				mem:write_u8(0xc7, 30)  -- suspend game
+				mem:write_u8(0x2f, _enemy[1])  -- freeze the enemy locations
+				mem:write_u8(0x30, _enemy[2])
+				mem:write_u8(0x33, _enemy[3])
+				mem:write_u8(0x34, _enemy[4])
 				draw_continue_box()
 				if b_push_p1 then
 					i_tally = i_tally + 1
@@ -163,7 +162,7 @@ function continue.startplugin()
 				i_stop = i_frame + 600
 			end
 			if i_stop and i_stop > i_frame then
-				mem:write_u8(0x87, 10)  -- suspend game
+				mem:write_u8(0x87, 20)  -- suspend game
 				draw_continue_box()
 				if b_push_p1 then
 					i_tally = i_tally + 1
@@ -203,7 +202,7 @@ function continue.startplugin()
 				scr:draw_box(0,8, 256, 232, BLK, BLK)  -- temporarily hide the play field
 			end
 			if i_stop and i_stop > i_frame then
-				draw_continue_box(4)
+				draw_continue_box(3)
 				if b_push_p1 then
 					video.throttle_rate = 1  -- restore emulation to full speed
 					i_tally = i_tally + 1
@@ -236,9 +235,9 @@ function continue.startplugin()
 
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
-				i_stop = i_frame + 90
+				i_stop = i_frame + 150
 				_hide_stop = i_stop + 35  -- hide the playfield during message and for 35 frames after pushing continue
-				video.throttle_rate = 0.2 -- adjust emulation speed to allow more time for decision
+				video.throttle_rate = 0.175 -- adjust emulation speed to allow more time for decision
 			end
 
 			if _hide_stop and _hide_stop > i_frame then
@@ -247,7 +246,7 @@ function continue.startplugin()
 
 			if i_stop and i_stop > i_frame then
 				mem:write_u8(0x9848, 0)  -- switch off player collisions while waiting for decision
-				draw_continue_box(6)
+				draw_continue_box(4)
 				if sound then sound.attenuation = -32 end
 				if b_push_p1 then
 					video.throttle_rate = 1  -- restore emulation to full speed
@@ -744,15 +743,18 @@ function continue.startplugin()
 				elseif _pixel == "+" then  -- blank a full vertical row of pixels
 					scr:draw_box(pos_y-(_y*r_scale), pos_x+_x, pos_y-(_y*r_scale)+r_scale, pos_x+_x+47, BLK, BLK)
 					break
+				elseif _pixel == "@" then  -- draw 2 coloured pixels
+					scr:draw_box(pos_y-(_y*r_scale), pos_x+_x, pos_y-(_y*r_scale)+r_scale, pos_x+_x+2, r_color, r_color)
+					_x = _x + 2
 				else -- write 1 pixel of determined colour
 					_col = BLK
 					if _pixel == "!" then  -- this is the text
 						_col = r_color
 					elseif _pixel >= "a" and _pixel <= "Z" and _progress and string.byte(_pixel) <= _progress then
-						if _per < 25 and _per % 4 < 2 then
+						if _pos <= (15 / _speed) and _per % 4 > 2 then
 							_col = RED
 						else
-							_col = WHT
+							_col = r_color
 						end
 					end
 					scr:draw_box(pos_y-(_y*r_scale), pos_x+_x, pos_y-(_y*r_scale)+r_scale, pos_x+_x+1, _col, _col)
@@ -764,7 +766,7 @@ function continue.startplugin()
 
 	function draw_continue_box(speed_factor)
 		_speed = speed_factor or 1
-		_cnt = math.floor((i_stop - i_frame) / 6)
+		_cnt = math.floor((i_stop - i_frame) / 6) + 1
 		local _y, _x = r_yx[1], r_yx[2]
 		if r_flip then
 			draw_graphic(message_data, _y+(24*r_scale), _x+(7*r_scale), _cnt, speed_factor)
