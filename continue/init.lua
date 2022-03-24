@@ -35,6 +35,7 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local r_function, r_tally_yx, r_yx, r_color, r_flip, r_rotate, r_scale, r_tally_colors
 	-- supported rom name     function       tally yx    msg yx    col  flip   rotate scale
+	rom_table["berzerk"]    = {"bzerk_func", {008,008}, {320,160}, WHT, true,  true,  1}
 	rom_table["bzone"]      = {"bzone_func", {008,008}, {320,160}, WHT, true,  true,  1}
 	rom_table["centiped"]   = {"centi_func", {217,016}, {102,054}, GRN, false, false, 1}
 	rom_table["missile"]    = {"missl_func", {001,001}, {164,080}, WHT, true,  true,  1}
@@ -97,6 +98,27 @@ function continue.startplugin()
 	---------------------------------------------------------------------------
 	-- Game specific functions
 	---------------------------------------------------------------------------
+	function bzerk_func()
+		-- ROM disassembly at http://seanriddle.com/berzerk.asm
+		h_mode = read(0x436e)  --0=playing, otherwise demo mode
+		h_remain_lives = read(0x4349)
+		h_start_lives = 3
+		b_1p_game = read(0x4376, 1)
+		b_reset_continue = h_remain_lives > 1
+		b_show_tally = h_mode == 0 and read(0x4344,1) -- 1 player playing and not in demo mode
+		b_reset_tally = h_mode ~= 0 or not read(0x4344,1) or i_tally == nil
+
+		--print(read(0x5bc0)) goes to zero when starting new life
+
+		i_stop = true -- testing
+		b_push_p1 = i_stop and to_bits(ports[":SYSTEM"]:read())[1] == 0
+		if b_push_p1 then
+			for _addr=0x433e, 0x4340 do mem:write_u8(_addr, 0) end -- reset score in memory
+			mem:write_u8(0x436d, 0xff) -- set score update flag
+		end
+	end
+
+
 	function bzone_func()
 		-- ROM disassembly at https://6502disassembly.com/va-battlezone/
 		h_mode = read(0xce) -- 0x0=not playing, 0xff=playing
@@ -635,16 +657,7 @@ function continue.startplugin()
 	--	i_stop = true
 	--	b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[5] == 1
 	--	if b_push_p1 then
-	--		-- search for 2450
-	--		for _addr=0x0000, 0xbfff do
-	--			if read(_addr, 0) and read(_addr+1, 5) and read(_addr+2, 4) and read(_addr+3, 2) then
-	--				print(string.format("%x",_addr))
-	--			end
-	--		end
-	--
 	--		-- reset score in memory
-	--		--for _addr=0xa004, 0xa009 do mem:write_u8(_addr, 0x00) end
-	--		-- reset score in video ram
 	--		--for _addr=0x9ffd, 0xa000 do mem:write_u8(_addr, 0x00) end
 	--
 	--	end
