@@ -41,11 +41,11 @@ function continue.startplugin()
 	rom_table["suprmatk"]   = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
 	rom_table["qbert"]      = {"qbert_func", {217,016}, {102,053}, WHT, false, false, 1}
 	rom_table["qberta"]     = {"qbert_func", {217,016}, {102,053}, WHT, false, false, 1}
-	rom_table["robotron"]   = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
-	rom_table["robotrontd"] = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
-	rom_table["robotron12"] = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
-	rom_table["robotronyo"] = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
-	rom_table["robotron87"] = {"rbtrn_func", {000,015}, {172,096}, YEL, true,  true,  1}
+	rom_table["robotron"]   = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
+	rom_table["robotrontd"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
+	rom_table["robotron12"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
+	rom_table["robotronyo"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
+	rom_table["robotron87"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
 	rom_table["frogger"]    = {"frogr_func", {052,219}, {336,032}, WHT, true,  false, 3}
 	rom_table["invaders"]   = {"invad_func", {237,009}, {102,054}, GRN, false, false, 1}
 	rom_table["galaga"]     = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
@@ -73,37 +73,26 @@ function continue.startplugin()
 	--rom_table["sinistar"]   = {"snstr_func", {217,016}, {102,060}, WHT, false, false, 1}
 
 	-- encoded message data
-	message_data = {"*","*","*","*","*","*","*","*","8@@@2@3@2@@3@3@9@@@5@93@@4@@@3@!3@@@3@@@8","8@3@1@3@1@2@2@3@9@3@3@!92@2@5@4@1@2@3@4@91",
-		"8@3@1@3@1@6@3@9@3@4@92@9@3@3@1@3@4@91","8@3@1@3@2@@!2@@@!9@3@4@93@@!5@3@3@1@2@!4@91","8@@@2@3@6@1@3@9@@@5@97@4@3@@@!1@@!6@91",
-		"8@6@3@1@3@1@3@9@9@92@3@4@3@3@1@1@!5@91","8@7@@!3@@!2@3@9@7@@@91@@!5@3@3@1@2@!4@91","*","98@@@2@@!93@@3@@!2@3@2@@@2@@@1@3@1@3@1@@@!97",
-		"991@3@3@91@2@1@3@1@!2@4@6@3@!2@1@3@1@993","991@3@3@9@6@3@1@@1@4@6@3@@1@1@3@1@993","991@3@3@9@6@3@1@@@!4@6@3@@@!1@3@1@@@98",
-		"991@3@3@9@6@3@1@1@@4@6@3@1@@1@3@1@993","991@3@3@91@2@1@3@1@2@!4@6@3@2@!1@3@1@993","991@4@@!93@@3@@!2@3@4@4@@@1@3@2@@!2@@@!97",
-		"*","*","*","*","*","*","*","*","*",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
-		"8AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwwxxxyyy8",
-		"*","*","*","*","*","*","*","*","*"};
+	message_data = {"*","*","*","*","*","*","*","*","8&@2@3@2&3@3@9&@5@93&4&@3@!3&@3&@8","8@3@1@3@1@2@2@3@9@3@3@!92@2@5@4@1@2@3@4@91",
+		"8@3@1@3@1@6@3@9@3@4@92@9@3@3@1@3@4@91","8@3@1@3@2&!2&@!9@3@4@93&!5@3@3@1@2@!4@91","8&@2@3@6@1@3@9&@5@97@4@3&@!1&!6@91",
+		"8@6@3@1@3@1@3@9@9@92@3@4@3@3@1@1@!5@91","8@7&!3&!2@3@9@7&@91&!5@3@3@1@2@!4@91","*","98&@2&!93&3&!2@3@2&@2&@1@3@1@3@1&@!97",
+		"991@3@3@91@2@1@3@1@!2@4@6@3@!2@1@3@1@993","991@3@3@9@6@3@1&1@4@6@3&1@1@3@1@993","991@3@3@9@6@3@1?4@6@3?1@3@1&@98",
+		"991@3@3@9@6@3@1@1&4@6@3@1&1@3@1@993","991@3@3@91@2@1@3@1@2@!4@6@3@2@!1@3@1@993","991@4&!93&3&!2@3@4@4&@1@3@2&!2&@!97","*","*","*","*","*",
+		"*","*","*","*","8ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwwxyy8","8ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwwxyy8",
+		"8ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwwxyy8","8ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwwxyy8",
+		"8ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwwxyy8","8ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwwxyy8",
+		"8ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwwxyy8","*","*","*","*","*","*","*","*","*"}
 
-	message_data_rotated = {"+","+","+","+","+","+","+","+","9AAAAAAA97@@@!8","9AAAAAAA97@@@!8","9BBBBBBB99!3!8","9BBBBBBB99!3!8",
-		"9CCCCCCC99!3!8","9CCCCCCC99@@!8","9DDDDDDD991@!9","9DDDDDDD9994","9EEEEEEE98@@@8","9EEEEEEE95!1@@@!8","9FFFFFFF95!1!95",
-		"9FFFFFFF8@@@!1!95","9GGGGGGG8@@@!1!95","9GGGGGGG95!1@@@!8","9HHHHHHH95!2@@@8","9HHHHHHH9994","9IIIIIII9@@!3!2@9","9IIIIIII8@@@!1@1@@8",
-		"9JJJJJJJ8!5!1!2!2!8","9JJJJJJJ8!5!1!2!2!8","9KKKKKKK8!5!1!2!1@8","9KKKKKKK8@@@!1@@1!9","9LLLLLLL9@@!3@93","9LLLLLLL9994",
-		"9MMMMMMM97@@@!8","9MMMMMMM97@@@!8","9NNNNNNN991!92","9NNNNNNN991!92","9OOOOOOO991!92","9OOOOOOO97@@@!8","9PPPPPPP97@@@!8",
-		"9PPPPPPP9994","9QQQQQQQ91@!99","9QQQQQQQ9@@!98","9RRRRRRR8@3@97","9RRRRRRR8!5!97","9SSSSSSS8!5!97","9SSSSSSS8@3@97","9TTTTTTT9!3!98",
-		"9TTTTTTT9994","9UUUUUUU9@@!2@@@!8","9UUUUUUU8@@@!1@@@!8","9VVVVVVV8!5!3!3!8","9VVVVVVV8!5!3!3!8","9WWWWWWW8!5!3!3!8",
-		"9WWWWWWW8@@@!3@@!8","9XXXXXXX9@@!5@!9","9XXXXXXX9994","9YYYYYYY8@@@!97","9YYYYYYY8@@@!1!95","9aaaaaaa92@!2!4!9","9aaaaaaa91@!3@@@!8",
-		"9bbbbbbb9@!4@@@!8","9bbbbbbb8@@@!1!95","9ccccccc8@@@!1!95","9ccccccc9994","9ddddddd9994","9ddddddd95!97","9eeeeeee95!97",
-		"9eeeeeee8@@@!97","9fffffff8@@@!97","9fffffff95!97","9ggggggg95!97","9ggggggg9994","9hhhhhhh98!2@9","9hhhhhhh8!5!1@1@@8",
-		"9iiiiiii8!5!1!2!2!8","9iiiiiii8@@@!1!2!2!8","9jjjjjjj8@@@!1!2!1@8","9jjjjjjj8!5!1@@1!9","9kkkkkkk8!5!2@93","9kkkkkkk9994",
-		"9lllllll8@@@!97","9lllllll8@@@!7!8","9mmmmmmm92@!8!8","9mmmmmmm91@!3@@@!8","9nnnnnnn9@!4@@@!8","9nnnnnnn8@@@!7!8","9ooooooo8@@@!7!8",
-		"9ooooooo9994","9ppppppp9@@@1@@!91","9ppppppp8@@@!1@@@9","9qqqqqqq8!9!2@8","9qqqqqqq8!9!3!8","9rrrrrrr8!9!2@8","9rrrrrrr8@@@!1@@@9",
-		"9sssssss9@@@1@@!91","9sssssss9994","9ttttttt8@@@!1@@@!8","9ttttttt8@@@!1@@@!8","9uuuuuuu8!2!2!3!3!8","9uuuuuuu8!2!2!2@3!8",
-		"9vvvvvvv8!2!2!1@@2!8","9vvvvvvv8!2!2!1@1@@8","9wwwwwww8!5!1!2@!9","9wwwwwww9994","9wwwwwww9994","9xxxxxxx994!8","9xxxxxxx994!8",
-		"9xxxxxxx97@@@!8","9yyyyyyy97@@@!8","9yyyyyyy994!8","9yyyyyy995!8","+","+","+","+","+","+","+","+"}
+	message_data_rotated = {"+","+","+","+","+","+","+","+","9A97?8","9A97?8","9B99!3!8","9B99!3!8","9C99!3!8","9C99&!8","9D991@!9","9D9994",
+		"9E98&@8","9E95!1?8","9F95!1!95","9F8?1!95","9G8?1!95","9G95!1?8","9H95!2&@8","9H9994","9I9&!3!2@9","9I8?1@1&8","9J8!5!1!2!2!8",
+		"9J8!5!1!2!2!8","9K8!5!1!2!1@8","9K8?1&1!9","9L9&!3@93","9L9994","9M97?8","9M97?8","9N991!92","9N991!92","9O991!92","9O97?8","9P97?8",
+		"9P9994","9Q91@!99","9Q9&!98","9R8@3@97","9R8!5!97","9S8!5!97","9S8@3@97","9T9!3!98","9T9994","9U9&!2?8","9U8?1?8","9V8!5!3!3!8",
+		"9V8!5!3!3!8","9W8!5!3!3!8","9W8?3&!8","9X9&!5@!9","9X9994","9Y8?97","9Y8?1!95","9a92@!2!4!9","9a91@!3?8","9b9@!4?8","9b8?1!95","9c8?1!95",
+		"9c9994","9d9994","9d95!97","9e95!97","9e8?97","9f8?97","9f95!97","9g95!97","9g9994","9h98!2@9","9h8!5!1@1&8","9i8!5!1!2!2!8","9i8?1!2!2!8",
+		"9j8?1!2!1@8","9j8!5!1&1!9","9k8!5!2@93","9k9994","9l8?97","9l8?7!8","9m92@!8!8","9m91@!3?8","9n9@!4?8","9n8?7!8","9o8?7!8","9o9994",
+		"9p9&@1&!91","9p8?1&@9","9q8!9!2@8","9q8!9!3!8","9r8!9!2@8","9r8?1&@9","9s9&@1&!91","9s9994","9t8?1?8","9t8?1?8","9u8!2!2!3!3!8",
+		"9u8!2!2!2@3!8","9v8!2!2!1&2!8","9v8!2!2!1@1&8","9w8!5!1!2@!9","9w9994","9w9994","9x994!8","9x994!8","9x97?8","9y97?8","9y994!8","9y994!8",
+		"+","+","+","+","+","+","+","+"}
 
 	---------------------------------------------------------------------------
 	-- Game specific functions
@@ -721,45 +710,32 @@ function continue.startplugin()
 	end
 
 	function draw_graphic(data, pos_y, pos_x, percent, speed_factor)
+		local _len, _sub, _byte, _floor = string.len, string.sub, string.byte, math.floor
 		local _per = percent  or 100
 		local _speed = speed_factor or 1
-		local _len, _sub, _floor = string.len, string.sub, math.floor
-		local _pixel, _skip, _col
+		local _pixel, _wide, _col
 		local _pos = _floor(_per/2)
-		local _progress = string.byte(_sub("ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwxy", _pos * _speed, _pos * _speed))
-
+		local _index = _sub("ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwxy", _pos * _speed, _pos * _speed)
 		for _y, line in pairs(data) do
 			_x = 1
 			for _i=1, _len(line) do
 				_pixel = _sub(line, _i, _i)
-
-				if _pixel >= "1" and _pixel <= "9" then  -- blank a group of pixels based on number
-					_skip = tonumber(_pixel)
-					scr:draw_box(pos_y-(_y*r_scale), pos_x+_x, pos_y-(_y*r_scale)+r_scale, pos_x+_x+_skip, BLK, BLK)
-					_x = _x + _skip
-				elseif _pixel == "*" then  -- blank a full horizontal row of pixels
-					scr:draw_box(pos_y-(_y*r_scale), pos_x+_x, pos_y-(_y*r_scale)+r_scale, pos_x+_x+119, BLK, BLK)
-					break
-				elseif _pixel == "+" then  -- blank a full vertical row of pixels
-					scr:draw_box(pos_y-(_y*r_scale), pos_x+_x, pos_y-(_y*r_scale)+r_scale, pos_x+_x+47, BLK, BLK)
-					break
-				elseif _pixel == "@" then  -- draw 2 coloured pixels
-					scr:draw_box(pos_y-(_y*r_scale), pos_x+_x, pos_y-(_y*r_scale)+r_scale, pos_x+_x+2, r_color, r_color)
-					_x = _x + 2
-				else -- write 1 pixel of determined colour
-					_col = BLK
-					if _pixel == "!" then  -- this is the text
-						_col = r_color
-					elseif _pixel >= "a" and _pixel <= "Z" and _progress and string.byte(_pixel) <= _progress then
-						if _pos <= (15 / _speed) and _per % 4 > 2 then
-							_col = RED
-						else
-							_col = r_color
-						end
+				_col = BLK
+				if _pixel >= "1" and _pixel <= "9" then	_wide = tonumber(_pixel)
+				elseif _pixel == "*" then _wide = 119
+				elseif _pixel == "+" then _wide = 47
+				elseif _pixel == "!" then _col = r_color; _wide = 1
+				elseif _pixel == "@" then _col = r_color; _wide = 2
+				elseif _pixel == "&" then _col = r_color; _wide = 4
+				elseif _pixel == "?" then _col = r_color; _wide = 7
+				elseif (_pixel >= "a" and _pixel <= "z") or (_pixel >= "A" and _pixel <= "Z") then
+					if r_rotate then _wide = 7 else _wide = 2 end
+					if _byte(_index) and _byte(_pixel) <= _byte(_index) then
+						if _pos <= (15 / _speed) and _per % 4 > 2 then _col = RED else _col = r_color end
 					end
-					scr:draw_box(pos_y-(_y*r_scale), pos_x+_x, pos_y-(_y*r_scale)+r_scale, pos_x+_x+1, _col, _col)
-					_x = _x + 1
 				end
+				scr:draw_box(pos_y-(_y*r_scale), pos_x+_x, pos_y-(_y*r_scale)+r_scale, pos_x+_x+_wide, _col, _col)
+				_x = _x + _wide
 			end
 		end
 	end
@@ -769,9 +745,9 @@ function continue.startplugin()
 		_cnt = math.floor((i_stop - i_frame) / 6) + 1
 		local _y, _x = r_yx[1], r_yx[2]
 		if r_flip then
-			draw_graphic(message_data, _y+(24*r_scale), _x+(7*r_scale), _cnt, speed_factor)
+			draw_graphic(message_data, _y+(24*r_scale), _x+(7*r_scale), _cnt, _speed)
 		else
-			draw_graphic(message_data, _y+(40*r_scale), _x+(7*r_scale), _cnt, speed_factor)
+			draw_graphic(message_data, _y+(40*r_scale), _x+(7*r_scale), _cnt, _speed)
 		end
 	end
 
