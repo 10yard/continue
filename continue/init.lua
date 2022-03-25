@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------------------
 local exports = {}
 exports.name = "continue"
-exports.version = "0.16"
+exports.version = "0.17"
 exports.description = "Continue plugin"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -35,9 +35,9 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local r_function, r_tally_yx, r_yx, r_color, r_flip, r_rotate, r_scale, r_tally_colors
 	-- supported rom name     function       tally yx    msg yx    col  flip   rotate scale
-	rom_table["berzerk"]    = {"bzerk_func", {-01,000}, {160,072}, WHT, true,  true,  1}
+	rom_table["berzerk"]    = {"bzerk_func", {-01,000}, {160,072}, GRN, true,  true,  1}
 	rom_table["bzone"]      = {"bzone_func", {008,008}, {320,160}, WHT, true,  true,  1}
-	rom_table["centiped"]   = {"centi_func", {217,016}, {102,054}, GRN, false, false, 1}
+	rom_table["centiped"]   = {"centi_func", {001,001}, {102,054}, GRN, false, false, 1}
 	rom_table["missile"]    = {"missl_func", {001,001}, {164,080}, WHT, true,  true,  1}
 	rom_table["suprmatk"]   = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
 	rom_table["qbert"]      = {"qbert_func", {217,016}, {102,053}, WHT, false, false, 1}
@@ -175,7 +175,7 @@ function continue.startplugin()
 		b_1p_game = read(0x89, 1)
 		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[1] == 0
 		b_show_tally = h_mode ~= 0xff
-		b_reset_tally = h_mode == 0x0 or i_tally == nil
+		b_reset_tally = h_mode == 0xff or i_tally == nil
 		b_reset_continue = h_remain_lives > 1 or i_tally == nil
 		b_almost_gameover = b_1p_game and h_mode == 0x0 and h_remain_lives == 0 and read(0xb7, 10)
 
