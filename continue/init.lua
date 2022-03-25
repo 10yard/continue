@@ -38,7 +38,7 @@ function continue.startplugin()
 	rom_table["berzerk"]    = {"bzerk_func", {-01,000}, {160,072}, GRN, true,  true,  1}
 	rom_table["bzone"]      = {"bzone_func", {008,008}, {320,160}, WHT, true,  true,  1}
 	rom_table["centiped"]   = {"centi_func", {001,001}, {102,054}, GRN, false, false, 1}
-	rom_table["missile"]    = {"missl_func", {001,001}, {164,080}, WHT, true,  true,  1}
+	rom_table["missile"]    = {"missl_func", {001,001}, {164,080}, YEL, true,  true,  1}
 	rom_table["suprmatk"]   = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
 	rom_table["qbert"]      = {"qbert_func", {217,016}, {102,053}, WHT, false, false, 1}
 	rom_table["qberta"]     = {"qbert_func", {217,016}, {102,053}, WHT, false, false, 1}

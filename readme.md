@@ -7,7 +7,7 @@ The continue option will appear before your game is over with a 10 second countd
 A tally of the number of continues made will appear at the top of the screen.
 
 
-![Continue Plugin Screenshot](https://i.imgur.com/boLrqHc.png)
+![Continue Plugin Screenshot](https://i.imgur.com/4rnfvYl.png)
 
 
 The plugin currently supports these games:
@@ -21,6 +21,7 @@ The plugin currently supports these games:
 - Robotron
 - Donkey Kong
 - Donkey Kong Junior
+- Berzerk
 - Missile Command
 - Centipede
 - Battlezone
