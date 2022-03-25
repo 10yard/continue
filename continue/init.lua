@@ -25,7 +25,7 @@ function continue.startplugin()
 
 	-- general use variables
 	local h_mode, h_start_lives, h_remain_lives
-	local i_frame, i_stop, i_tally
+	local i_frame, i_stop, i_tally, i_attenuation
 	local b_1p_game, b_game_restart, b_almost_gameover, b_reset_continue, b_reset_tally, b_show_tally, b_push_p1
 
 	-- colours
@@ -35,7 +35,7 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local r_function, r_tally_yx, r_yx, r_color, r_flip, r_rotate, r_scale, r_tally_colors
 	-- supported rom name     function       tally yx    msg yx    col  flip   rotate scale
-	rom_table["berzerk"]    = {"bzerk_func", {008,008}, {320,160}, WHT, true,  true,  1}
+	rom_table["berzerk"]    = {"bzerk_func", {-01,000}, {160,072}, WHT, true,  true,  1}
 	rom_table["bzone"]      = {"bzone_func", {008,008}, {320,160}, WHT, true,  true,  1}
 	rom_table["centiped"]   = {"centi_func", {217,016}, {102,054}, GRN, false, false, 1}
 	rom_table["missile"]    = {"missl_func", {001,001}, {164,080}, WHT, true,  true,  1}
@@ -104,17 +104,28 @@ function continue.startplugin()
 		h_remain_lives = read(0x4349)
 		h_start_lives = 3
 		b_1p_game = read(0x4376, 1)
-		b_reset_continue = h_remain_lives > 1
+		b_reset_continue = h_remain_lives > 1 or i_tally == nil
 		b_show_tally = h_mode == 0 and read(0x4344,1) -- 1 player playing and not in demo mode
 		b_reset_tally = h_mode ~= 0 or not read(0x4344,1) or i_tally == nil
-
-		--print(read(0x5bc0)) goes to zero when starting new life
-
-		i_stop = true -- testing
 		b_push_p1 = i_stop and to_bits(ports[":SYSTEM"]:read())[1] == 0
-		if b_push_p1 then
-			for _addr=0x433e, 0x4340 do mem:write_u8(_addr, 0) end -- reset score in memory
-			mem:write_u8(0x436d, 0xff) -- set score update flag
+		b_almost_gameover = b_1p_game and h_mode == 0 and h_remain_lives == 1 and read(0x0898, 0x42) -- voice indicates death
+
+		if b_1p_game then
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 120
+				video.throttle_rate = 0.18 -- adjust emulation speed to allow more time for decision
+				sound.attenuation = -32  -- mute sounds
+			end
+			if i_stop and i_stop > i_frame then
+				draw_continue_box(5)
+				if b_push_p1 then
+					i_tally = i_tally + 1
+					i_stop = nil
+					mem:write_u8(0x4349, h_start_lives + 1)
+					for _addr=0x433e, 0x4340 do mem:write_u8(_addr, 0) end -- reset score in memory
+					mem:write_u8(0x436d, 0xff) -- set score update flag
+				end
+			end
 		end
 	end
 
@@ -128,7 +139,7 @@ function continue.startplugin()
 		b_1p_game = true
 		b_show_tally = h_mode == 0xff
 		b_reset_tally = h_mode == 0x0 or i_tally == nil
-		b_reset_continue = h_remain_lives > 1
+		b_reset_continue = h_remain_lives > 1 or i_tally == nil
 		b_almost_gameover = b_1p_game and h_mode == 0xff and h_remain_lives == 0 and not read(0xcd, 0)
 		r_tally_colors = {WHT, WHT}  -- override tally colours to work with the red/green overlay
 
@@ -165,7 +176,7 @@ function continue.startplugin()
 		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[1] == 0
 		b_show_tally = h_mode ~= 0xff
 		b_reset_tally = h_mode == 0x0 or i_tally == nil
-		b_reset_continue = h_remain_lives > 1
+		b_reset_continue = h_remain_lives > 1 or i_tally == nil
 		b_almost_gameover = b_1p_game and h_mode == 0x0 and h_remain_lives == 0 and read(0xb7, 10)
 
 		if b_1p_game then
@@ -192,7 +203,7 @@ function continue.startplugin()
 		b_push_p1 = i_stop and to_bits(ports[":IN0"]:read())[5] == 0
 		b_1p_game = read(0xae, 0)
 		b_reset_tally = h_mode == 0x0 or i_tally == nil
-		b_reset_continue = h_remain_lives > 1
+		b_reset_continue = h_remain_lives > 1 or i_tally == nil
 		b_show_tally = h_mode == 0xff
 		if b_reset_tally or not h_start_lives then
 			h_start_lives = 3 + to_bits(ports[":R8"]:read())[1]*2 + to_bits(ports[":R8"]:read())[2] -- read lives from dips
@@ -205,9 +216,10 @@ function continue.startplugin()
 		---- Logic
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
-				i_stop = i_frame + 170
+				i_stop = i_frame + 190
 				_hide_stop = i_stop + 90  -- hide the playfield during message and for 90 frames after pushing continue
 				video.throttle_rate = 0.35 -- adjust emulation speed to allow more time for decision
+				sound.attenuation = -32 -- mute sounds
 			end
 			if _hide_stop and _hide_stop > i_frame then
 				scr:draw_box(0,8, 256, 232, BLK, BLK)  -- temporarily hide the play field
@@ -215,7 +227,6 @@ function continue.startplugin()
 			if i_stop and i_stop > i_frame then
 				draw_continue_box(3)
 				if b_push_p1 then
-					video.throttle_rate = 1  -- restore emulation to full speed
 					i_tally = i_tally + 1
 					mem:write_u8(0xc0, h_start_lives)
 					mem:write_u8(0xcf, 0)
@@ -223,8 +234,6 @@ function continue.startplugin()
 					for _add = 0x01d6, 0x01db do  mem:write_u8(_add, 0) end  -- reset score in memory
 					mem:write_u8(0xd4, 0xff)  -- set flag to redraw the score
 				end
-			else
-				video.throttle_rate = 1  -- restore emulation to full speed
 			end
 		end
 	end
@@ -237,18 +246,15 @@ function continue.startplugin()
 		b_push_p1 = i_stop and to_bits(ports[":IN0"]:read())[5] == 1
 		b_reset_tally = h_mode ~= 2 or i_tally == nil
 		b_show_tally = b_1p_game and h_mode == 2
-		b_reset_continue = h_mode ~=2 or h_remain_lives >= 1
+		b_reset_continue = h_mode ~=2 or h_remain_lives >= 1 or i_tally == nil
 		b_almost_gameover = h_mode == 2 and h_remain_lives == 0 and read(0x9859) == 0x1b  -- 0x1b when player dies
-		if not sound then sound = {} end
-		if b_reset_tally then
-			_attenuation = sound.attenuation
-		end
 
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
-				i_stop = i_frame + 150
+				i_stop = i_frame + 100
 				_hide_stop = i_stop + 35  -- hide the playfield during message and for 35 frames after pushing continue
-				video.throttle_rate = 0.175 -- adjust emulation speed to allow more time for decision
+				video.throttle_rate = 0.17 -- adjust emulation speed to allow more time for decision
+				sound.attenuation = -32  -- mute sounds
 			end
 
 			if _hide_stop and _hide_stop > i_frame then
@@ -257,19 +263,13 @@ function continue.startplugin()
 
 			if i_stop and i_stop > i_frame then
 				mem:write_u8(0x9848, 0)  -- switch off player collisions while waiting for decision
-				draw_continue_box(4)
-				if sound then sound.attenuation = -32 end
+				draw_continue_box(6)
 				if b_push_p1 then
-					video.throttle_rate = 1  -- restore emulation to full speed
-					if sound then sound.attenuation = _attenuation end
 					i_tally = i_tally + 1
 					i_stop = nil
 					mem:write_u8(0xbdec, h_start_lives)
 					for _addr=0xbde4, 0xbde7 do mem:write_u8(_addr, 0x00) end  -- reset score in memory
 				end
-			else
-				video.throttle_rate = 1  -- restore emulation to full speed
-				if sound then sound.attenuation = _attenuation end
 			end
 		end
 	end
@@ -288,7 +288,7 @@ function continue.startplugin()
 		b_almost_gameover = h_remain_lives == 1 and _dead and _dead_count == 50 -- react to dead status at 50 ticks
 		b_reset_tally = h_mode == 0xf4 or i_tally == nil
 		b_show_tally = h_remain_lives >= 1 and h_mode ~=0xf4 and read(0x3da3) ~= 0xa5  --0xa5 is a tile on level screen
-		b_reset_continue = h_remain_lives > 1
+		b_reset_continue = h_remain_lives > 1 or i_tally == nil
 		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[1] == 1
 
 		-- Logic
@@ -343,7 +343,7 @@ function continue.startplugin()
 		h_start_lives = read(0x6020)
 		b_1p_game = read(0x600f, 0)
 		b_almost_gameover = h_mode == 13 and read(0x6228, 1) and read(0x639d, 2)
-		b_reset_continue = h_mode == 11
+		b_reset_continue = h_mode == 11 or i_tally == nil
 		b_reset_tally = h_mode == 7 or i_tally == nil
 		b_show_tally = h_mode >= 8 and h_mode <= 16
 		b_push_p1 = i_stop and to_bits(read(0x7d00))[3] == 1
@@ -376,7 +376,7 @@ function continue.startplugin()
 		end
 		b_1p_game = read(0x400e, 0)
 		b_almost_gameover = read(0x4201, 1) and read(0x421d, 0) and read(0x4205, 10)
-		b_reset_continue = read(0x4200, 1)  -- player has spawned
+		b_reset_continue = read(0x4200, 1) or i_tally == nil -- player has spawned
 		b_show_tally = read(0x4006)  -- game is in play
 		b_reset_tally = h_mode == 1 or i_tally == nil
 		b_push_p1 = i_stop and read(0x6800, 1)
@@ -411,7 +411,7 @@ function continue.startplugin()
 		b_reset_tally = h_mode == 2 or i_tally == nil
 		b_show_tally = h_mode == 3
 		b_push_p1 = i_stop and to_bits(ports[':IN1']:read())[3] == 0
-		b_reset_continue = h_mode ~= 3 or h_remain_lives >= 1
+		b_reset_continue = h_mode ~= 3 or h_remain_lives >= 1 or i_tally == nil
 
 		-- check video ram for "CAPT" (part of FIGHTER CAPTURED message)
 		_capt = read(0x81f1) == 0xc and read(0x81d1) == 0xa and read(0x81b1) == 0x19 and read(0x8191) == 0x1d
@@ -451,7 +451,7 @@ function continue.startplugin()
 		b_push_p1 = i_stop and not to_bits(ports[":IN1"]:read())[8]
 		b_reset_tally = h_mode == 1 or i_tally == nil
 		b_show_tally = h_mode == 3 and b_1p_game
-		b_reset_continue = h_mode ~= 3 or h_remain_lives >= 1
+		b_reset_continue = h_mode ~= 3 or h_remain_lives >= 1 or i_tally == nil
 
 		if h_mode == 0 and read(0x83dd, 0) and read(0x83dc) < 10 then
 			-- force death just before timer expiry so we can display the continue message
@@ -464,6 +464,7 @@ function continue.startplugin()
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
 				i_stop = i_frame + 600
+				sound.attenuation = -32  -- mute sounds
 			end
 			if i_stop and i_stop > i_frame then
 				cpu.state["H"].value = 255  -- force delay timer to keep running
@@ -495,7 +496,7 @@ function continue.startplugin()
 		b_push_p1 = i_stop and to_bits(ports[':IN1']:read())[3] == 1
 		-- player was blown up on last life. Animation sprite and timer indicate a specific frame
 		b_almost_gameover = read(0x2015) < 128 and h_remain_lives == 0 and read(0x2016) == 1 and read(0x2017) == 1
-		b_reset_continue = mode == 0 or h_remain_lives >= 1
+		b_reset_continue = mode == 0 or h_remain_lives >= 1 or i_tally == nil
 		h_start_lives = 3
 		if to_bits(ports[':IN2']:read())[1] == 1 then h_start_lives = h_start_lives + 1 end  -- dip adjust start lives
 		if to_bits(ports[':IN2']:read())[2] == 1 then h_start_lives = h_start_lives + 1 end  -- dip adjust start lives
@@ -535,7 +536,7 @@ function continue.startplugin()
 		h_remain_lives = read(0x80d8)
 		b_1p_game = read(0x8080, 0)
 		b_almost_gameover = read(0x8073, 0) and h_remain_lives == 0
-		b_reset_continue = h_mode == 0 or h_remain_lives >= 1
+		b_reset_continue = h_mode == 0 or h_remain_lives >= 1 or i_tally == nil
 		b_show_tally = h_mode == 1
 		b_reset_tally = h_mode == 0 or i_tally == nil
 		b_push_p1 = i_stop and to_bits(read(0xb800))[3] == 1
@@ -571,7 +572,7 @@ function continue.startplugin()
 		b_1p_game = read(0x4e70, 0)
 		b_game_restart = read(0x4e04, 2)
 		b_almost_gameover = h_mode == 3 and h_remain_lives == 0 and read(0x4e04,4)
-		b_reset_continue = read(0x4e03, 3)
+		b_reset_continue = read(0x4e03, 3) or i_tally == nil
 		b_reset_tally = h_mode == 2 or i_tally == nil
 		b_show_tally = h_mode == 3
 		b_push_p1 = i_stop and to_bits(read(0x5040))[6] == 0
@@ -614,7 +615,7 @@ function continue.startplugin()
 		h_start_lives = read(0x56)
 		h_remain_lives = read(0x57)
 		b_1p_game = read(0x1c, 1)
-		b_reset_continue = h_mode == 255
+		b_reset_continue = h_mode == 255 or i_tally == nil
 		b_reset_tally = not b_1p_game or i_tally == nil
 		b_show_tally = b_1p_game
 		b_almost_gameover = h_mode == 160 and h_remain_lives == 0
@@ -627,7 +628,6 @@ function continue.startplugin()
 			end
 			if i_stop and i_stop > i_frame then
 				mem:write_u8(0x21b, 160)  -- suspend game by setting the game mode counter
-
 				message_data = flip_table(message_data_rotated)
 				scr:draw_box(348, 248, 660, 280, BLK, BLK)  -- blackout the GAME OVER text
 				draw_continue_box()
@@ -676,6 +676,7 @@ function continue.startplugin()
 			mac = manager:machine()
 			ports = mac:ioport().ports
 			video = mac:video()
+			sound = {}
 		else
 			print("ERROR: The continue plugin requires MAME version 0.196 or greater.")
 		end
@@ -685,8 +686,11 @@ function continue.startplugin()
 				cpu = mac.devices[":maincpu"]
 				mem = cpu.spaces["program"]
 
+				--store the default sound level
+				i_attenuation = sound.attenuation
+
+				-- read rom data and split into convenient variables
 				rom_data = rom_table[emu:romname()]
-				-- split out rom_data into convenient variables
 				r_function = _G[rom_data[1]]
 				r_tally_yx = rom_data[2]
 				r_yx = rom_data[3]
@@ -696,12 +700,9 @@ function continue.startplugin()
 				r_scale = rom_data[7]
 				r_tally_colors = { WHT, CYN}
 
-				if r_rotate then
-					message_data = message_data_rotated
-				end
-				if r_flip then
-					message_data = flip_table(message_data)
-				end
+				-- flip/rotate the message data to suit the rom if necessary
+				if r_rotate then message_data = message_data_rotated end
+				if r_flip then message_data = flip_table(message_data) end
 			else
 				print("WARNING: The continue plugin does not support this rom.")
 			end
@@ -714,7 +715,12 @@ function continue.startplugin()
 			r_function()
 			if b_reset_tally then i_tally = 0 end
 			if b_1p_game then
-				if b_reset_continue then i_stop = nil end
+				if b_reset_continue then
+					i_stop = nil
+					-- Restore speed and sound.  Some roms slow down to allow time for continue message.
+					video.throttle_rate = 1
+					sound.attenuation = i_attenuation
+				end
 				if b_show_tally then
 					draw_tally(i_tally)
 				end
@@ -744,7 +750,7 @@ function continue.startplugin()
 				elseif (_pixel >= "a" and _pixel <= "z") or (_pixel >= "A" and _pixel <= "Z") then
 					if r_rotate then _wide = 7 else _wide = 2 end
 					if _byte(_index) and _byte(_pixel) <= _byte(_index) then
-						if _pos <= (15 / _speed) and _per % 4 > 2 then _col = RED else _col = r_color end
+						if _pos <= (15/_speed) and (_speed > 1 or _per % 4 > 2) then _col = RED else _col = r_color end
 					end
 				end
 				scr:draw_box(pos_y-(_y*r_scale), pos_x+_x, pos_y-(_y*r_scale)+r_scale, pos_x+_x+_wide, _col, _col)

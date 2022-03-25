@@ -62,8 +62,8 @@ The MAMEdev team
 Scott Lawrence (BleuLlama) for Pac-Man/Ms.Pac-Man ROM Disassembly resources at:
 - https://github.com/BleuLlama/GameDocs/blob/master/disassemble/mspac.asm
 
-Sean Riddle for Galaxians and Robotron ROM disassembly resources at:
-- http://seanriddle.com
+Scott Tunstall Galaxians, Robotron and Berzerk ROM disassembly resources at:
+- http://seanriddle.com/willy3.html#soft
 
 Kef Schecter (furrykey) for Donkey Kong ROM disassembly resources at:
 - https://github.com/furrykef/dkdasm/blob/master/dkong.asm
