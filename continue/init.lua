@@ -35,7 +35,7 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local r_function, r_tally_yx, r_yx, r_color, r_flip, r_rotate, r_scale, r_tally_colors
 	-- supported rom name     function       tally yx    msg yx    col  flip   rotate scale
-	rom_table["berzerk"]    = {"bzerk_func", {-01,000}, {160,072}, GRN, true,  true,  1}
+	rom_table["berzerk"]    = {"bzerk_func", {-01,000}, {160,072}, YEL, true,  true,  1}
 	rom_table["bzone"]      = {"bzone_func", {008,008}, {320,160}, WHT, true,  true,  1}
 	rom_table["centiped"]   = {"centi_func", {001,001}, {102,054}, GRN, false, false, 1}
 	rom_table["missile"]    = {"missl_func", {001,001}, {164,080}, YEL, true,  true,  1}
@@ -71,7 +71,7 @@ function continue.startplugin()
 	rom_table["dkongjr"]    = {"dkong_func", {234,002}, {096,044}, YEL, false, false, 1}
 	rom_table["asteroid"]   = {"aster_func", {008,008}, {540,240}, WHT, false, true,  2}
 	rom_table["cclimber"]   = {"climb_func", {010,049}, {156,080}, CYN, true,  true,  1}
-	--rom_table["sinistar"]   = {"snstr_func", {217,016}, {102,060}, WHT, false, false, 1}
+	rom_table["sinistar"]   = {"snstr_func", {217,016}, {102,060}, WHT, false, false, 1}
 
 	-- encoded message data
 	message_data = {"*","*","*","*","*","*","*","*","8&@2@3@2&3@3@9&@5@93&4&@3@!3&@3&@8","8@3@1@3@1@2@2@3@9@3@3@!92@2@5@4@1@2@3@4@91",
@@ -107,13 +107,15 @@ function continue.startplugin()
 		b_show_tally = h_mode == 0 and read(0x4344,1) -- 1 player playing and not in demo mode
 		b_reset_tally = h_mode ~= 0 or not read(0x4344,1) or i_tally == nil
 		b_push_p1 = i_stop and to_bits(ports[":SYSTEM"]:read())[1] == 0
-		b_almost_gameover = b_1p_game and h_mode == 0 and h_remain_lives == 1 and read(0x0898, 0x42) -- voice indicates death
+
+		_hit = read(mem:read_u16(0x0876)) >= 128 -- read player vector structure to determine if player was hit
+		b_almost_gameover = b_1p_game and h_mode == 0 and h_remain_lives == 1 and _hit
 
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
 				i_stop = i_frame + 120
 				video.throttle_rate = 0.18 -- adjust emulation speed to allow 10 seconds to make decision
-				sound.attenuation = -32  -- mute sounds
+				sound.attenuation = -32 -- mute sounds
 			end
 			if i_stop and i_stop > i_frame then
 				draw_continue_box(5)
@@ -623,23 +625,24 @@ function continue.startplugin()
 		end
 	end
 
-	--function snstr_func()
-	--	-- WORK IN PROGRESS
-	--	-- No commented rom disassembly available. I worked this one out using MAME debugger.
-	--	-- Useful map info from MAME Driver:
-	--	--   0000-8fff Video RAM
-    --	--   9800-bfff RAM
-	--	h_start_lives = 3
-	--	h_remain_lives = read(0x9ffc)
-	--
-	--	i_stop = true
-	--	b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[5] == 1
-	--	if b_push_p1 then
-	--		-- reset score in memory
-	--		--for _addr=0x9ffd, 0xa000 do mem:write_u8(_addr, 0x00) end
-	--
-	--	end
-	--end
+	function snstr_func()
+		-- WORK IN PROGRESS
+		-- No commented rom disassembly available. I worked this one out using MAME debugger.
+		-- Useful map info from MAME Driver:
+		--   0000-8fff Video RAM
+    	--   9800-bfff RAM
+		h_start_lives = 3
+		h_remain_lives = read(0x9ffc)
+
+		i_stop = true
+		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[5] == 1
+		if b_push_p1 then
+			-- reset score in memory
+			--for _addr=0xa006, 0xa009 do mem:write_u8(_addr, 0x01) end
+			for _addr=0x9ffd, 0xa000 do mem:write_u8(_addr, 0x00) end
+			mem:write_u8(0x3c74, 1)
+		end
+	end
 
 	---------------------------------------------------------------------------
 	-- Plugin functions
@@ -654,7 +657,7 @@ function continue.startplugin()
 			mac = manager:machine()
 			ports = mac:ioport().ports
 			video = mac:video()
-			sound = {}
+			if tonumber(emu.app_version()) >= 0.215 then sound = mac:sound() else sound = {} end  -- sound from v0.215
 		else
 			print("ERROR: The continue plugin requires MAME version 0.196 or greater.")
 		end
