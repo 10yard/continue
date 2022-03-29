@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------------------
 local exports = {}
 exports.name = "continue"
-exports.version = "0.17"
+exports.version = "0.18"
 exports.description = "Continue plugin"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -35,32 +35,11 @@ function continue.startplugin()
 	local rom_data, rom_table = {}, {}
 	local r_function, r_tally_yx, r_yx, r_color, r_flip, r_rotate, r_scale, r_tally_colors
 	-- supported rom name     function       tally yx    msg yx    col  flip   rotate scale
+	rom_table["asteroid"]   = {"aster_func", {008,008}, {540,240}, WHT, false, true,  2}
 	rom_table["berzerk"]    = {"bzerk_func", {-01,000}, {160,072}, YEL, true,  true,  1}
 	rom_table["bzone"]      = {"bzone_func", {008,008}, {320,160}, WHT, true,  true,  1}
 	rom_table["centiped"]   = {"centi_func", {001,001}, {102,054}, GRN, false, false, 1}
-	rom_table["missile"]    = {"missl_func", {001,001}, {164,080}, YEL, true,  true,  1}
-	rom_table["suprmatk"]   = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
-	rom_table["qbert"]      = {"qbert_func", {217,016}, {102,053}, WHT, false, false, 1}
-	rom_table["qberta"]     = {"qbert_func", {217,016}, {102,053}, WHT, false, false, 1}
-	rom_table["robotron"]   = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
-	rom_table["robotrontd"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
-	rom_table["robotron12"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
-	rom_table["robotronyo"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
-	rom_table["robotron87"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
-	rom_table["frogger"]    = {"frogr_func", {052,219}, {336,032}, WHT, true,  false, 3}
-	rom_table["invaders"]   = {"invad_func", {237,009}, {102,054}, GRN, false, false, 1}
-	rom_table["galaga"]     = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
-	rom_table["galagamf"]   = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
-	rom_table["galagamk"]   = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
-	rom_table["galaxian"]   = {"galax_func", {052,216}, {328,032}, WHT, true,  false, 3}
-	rom_table["superg"]     = {"galax_func", {052,216}, {328,032}, WHT, true,  false, 3}
-	rom_table["moonaln"]    = {"galax_func", {052,216}, {328,032}, WHT, true,  false, 3}
-	rom_table["pacman"]     = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
-	rom_table["pacmanf"]    = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
-	rom_table["mspacman"]   = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
-	rom_table["mspacmnf"]   = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
-	rom_table["mspacmat"]   = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
-	rom_table["pacplus"]    = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["cclimber"]   = {"climb_func", {010,049}, {156,080}, CYN, true,  true,  1}
 	rom_table["dkong"]      = {"dkong_func", {234,009}, {096,044}, CYN, false, false, 1}
 	rom_table["dkongx"]     = {"dkong_func", {234,009}, {096,044}, CYN, false, false, 1}
 	rom_table["dkongx11"]   = {"dkong_func", {234,009}, {096,044}, CYN, false, false, 1}
@@ -69,9 +48,30 @@ function continue.startplugin()
 	rom_table["dkongf"]     = {"dkong_func", {234,009}, {096,044}, CYN, false, false, 1}
 	rom_table["dkongj"]     = {"dkong_func", {234,009}, {096,044}, CYN, false, false, 1}
 	rom_table["dkongjr"]    = {"dkong_func", {234,002}, {096,044}, YEL, false, false, 1}
-	rom_table["asteroid"]   = {"aster_func", {008,008}, {540,240}, WHT, false, true,  2}
-	rom_table["cclimber"]   = {"climb_func", {010,049}, {156,080}, CYN, true,  true,  1}
-	rom_table["sinistar"]   = {"snstr_func", {217,016}, {102,060}, WHT, false, false, 1}
+	rom_table["frogger"]    = {"frogr_func", {052,219}, {336,032}, WHT, true,  false, 3}
+	rom_table["galaga"]     = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
+	rom_table["galagamf"]   = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
+	rom_table["galagamk"]   = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
+	rom_table["galaxian"]   = {"galax_func", {052,216}, {328,032}, WHT, true,  false, 3}
+	rom_table["superg"]     = {"galax_func", {052,216}, {328,032}, WHT, true,  false, 3}
+	rom_table["moonaln"]    = {"galax_func", {052,216}, {328,032}, WHT, true,  false, 3}
+	rom_table["invaders"]   = {"invad_func", {237,009}, {102,054}, GRN, false, false, 1}
+	rom_table["missile"]    = {"missl_func", {001,001}, {164,080}, YEL, true,  true,  1}
+	rom_table["suprmatk"]   = {"missl_func", {001,001}, {152,080}, WHT, true,  true,  1}
+	rom_table["pacman"]     = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["pacmanf"]    = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["mspacman"]   = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["mspacmnf"]   = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["mspacmat"]   = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["pacplus"]    = {"pacmn_func", {018,216}, {120,044}, WHT, true,  false, 1}
+	rom_table["qbert"]      = {"qbert_func", {217,016}, {102,053}, WHT, false, false, 1}
+	rom_table["qberta"]     = {"qbert_func", {217,016}, {102,053}, WHT, false, false, 1}
+	rom_table["robotron"]   = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
+	rom_table["robotrontd"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
+	rom_table["robotron12"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
+	rom_table["robotronyo"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
+	rom_table["robotron87"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
+	rom_table["sinistar"]   = {"snstr_func", {287,000}, {102,060}, WHT, false, false, 1}
 
 	-- encoded message data
 	message_data = {"*","*","*","*","*","*","*","*","8&@2@3@2&3@3@9&@5@93&4&@3@!3&@3&@8","8@3@1@3@1@2@2@3@9@3@3@!92@2@5@4@1@2@3@4@91",
@@ -288,16 +288,9 @@ function continue.startplugin()
 
 		-- Logic
 		if b_1p_game and not _demo then
-			-- redraw lives as game does not refresh them
 			if b_show_tally then
-				for _k, _v in ipairs({0x3835, 0x3833, 0x3831}) do
-					if _k < h_remain_lives then
-						mem:write_u8(_v, 0xac)
-						mem:write_u8(_v+1, 0xad)
-					else
-						mem:write_u8(_v, 0x24)
-						mem:write_u8(_v+1, 0x24)
-					end
+				for _k, _v in ipairs({0x3835, 0x3833, 0x3831}) do  -- redraw lives as game does not refresh them
+					if _k < h_remain_lives then mem:write_u16(_v, 0xadac) else mem:write_u16(_v, 0x2424) end
 				end
 			end
 
@@ -313,8 +306,8 @@ function continue.startplugin()
 					i_stop = nil
 					mem:write_u8(0xd00, h_start_lives + 1)
 
-					--reset this counter - to fix a glitch wih blank lines being written to screen.  Assume these
-					--blank lines were removing the lives from screen.`
+					-- reset counter to fix a glitch wih blank lines being written to screen.  Assume these blank lines
+					-- were removing the lives from screen.`
 					mem:write_u8(0xd24, 0x30)
 
 					-- reset score in memory (do we need to clear more bytes?)
@@ -498,14 +491,10 @@ function continue.startplugin()
 				if b_push_p1 then
 					i_tally = i_tally + 1
 					mem:write_u8(0x21ff, h_start_lives)
-					mem:write_u8(0x20e9, 1) -- unsuspend game
 					i_stop = nil
-					--update score in memory
-					mem:write_u8(0x20f8, 0)
-					mem:write_u8(0x20f9, 0)
-					-- dummy screen update - by pushing 0 score adjustment
-					mem:write_u8(0x20f1,1)  -- adjust score flag
-					mem:write_u8(0x20f2,0)  -- score adjustment
+					mem:write_u8(0x20e9, 1) -- unsuspend game
+					mem:write_u16(0x20f8, 0x0000) --update score in memory
+					mem:write_u16(0x20f1, 0x0001) -- dummy screen update - by pushing 0 score adjustment
 				end
 			else
 				mem:write_u8(0x20e9, 1) -- unsuspend game
@@ -613,13 +602,11 @@ function continue.startplugin()
 				scr:draw_box(348, 248, 660, 280, BLK, BLK)  -- blackout the GAME OVER text
 				draw_continue_box()
 				if b_push_p1 then
-					mem:write_u8(0x21b, 200)  -- skip some of the explosion animation
 					i_tally = i_tally + 1
 					mem:write_u8(0x57, h_start_lives)
 					i_stop = nil
-					--reset score in memory
-					mem:write_u8(0x52, 0)
-					mem:write_u8(0x53, 0)
+					mem:write_u8(0x21b, 200)  -- skip some of the explosion animation
+					mem:write_u16(0x52, 0x0000) --reset score in memory
 				end
 			end
 		end
@@ -631,16 +618,35 @@ function continue.startplugin()
 		-- Useful map info from MAME Driver:
 		--   0000-8fff Video RAM
     	--   9800-bfff RAM
+		h_mode = read(0x9896)  -- 1==attract mode, 0==playing
 		h_start_lives = 3
 		h_remain_lives = read(0x9ffc)
-
-		i_stop = true
+		b_1p_game = read(0x988a, 1)
+		b_reset_tally = h_mode == 1 or not b_1p_game or i_tally == nil
+		b_show_tally = h_mode == 0
 		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[5] == 1
-		if b_push_p1 then
-			-- reset score in memory
-			--for _addr=0xa006, 0xa009 do mem:write_u8(_addr, 0x01) end
-			for _addr=0x9ffd, 0xa000 do mem:write_u8(_addr, 0x00) end
-			mem:write_u8(0x3c74, 1)
+
+		if _dead_cnt and read(0xa1ba, 1) then _dead_cnt = _dead_cnt + 1 else _dead_cnt = 0 end
+		b_almost_gameover = h_mode == 0 and h_remain_lives == 0 and read(0xa1ba, 1) and _dead_cnt == 40
+
+		-- Logic
+		if b_1p_game then
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 92
+				video.throttle_rate = 0.18 -- adjust emulation speed to allow 10 seconds to make decision
+				sound.attenuation = -32
+			end
+			if i_stop and i_stop > i_frame then
+				draw_continue_box(6)
+
+				if b_push_p1 then
+					i_tally = i_tally + 1
+					i_stop = nil
+					mem:write_u32(0x9ffd, 0x00000000)  -- reset score
+					mem:write_u8(0xa00b, 1)  -- update score flag
+					mem:write_u8(0x9ffc, h_start_lives)
+				end
+			end
 		end
 	end
 
