@@ -657,7 +657,7 @@ function continue.startplugin()
 			mac = manager:machine()
 			ports = mac:ioport().ports
 			video = mac:video()
-			if tonumber(emu.app_version()) >= 0.215 then sound = mac:sound() else sound = {} end  -- sound from v0.215
+			if tonumber(emu.app_version()) >= 0.212 then sound = mac:sound() else sound = {} end  -- sound from v0.215
 		else
 			print("ERROR: The continue plugin requires MAME version 0.196 or greater.")
 		end
