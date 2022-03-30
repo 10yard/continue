@@ -18,9 +18,10 @@ The plugin currently supports these games:
 - Galaxians
 - Frogger
 - Q*bert
-- Robotron
 - Donkey Kong
 - Donkey Kong Junior
+- Robotron
+- Sinistar
 - Berzerk
 - Missile Command
 - Centipede
@@ -43,7 +44,7 @@ Other variants of these games are also supported (including):
 
 Tested with latest MAME version 0.241
 
-Fully compatible with all MAME versions from 0.196
+Compatible with all MAME versions from 0.196
 
   
 ## Installing and running
@@ -80,6 +81,10 @@ hackbar and neiderm for Galaga ROM disassembly resources at:
 
 Andy McFadden for Missile Command, Centipede and Battlezone ROM disassembly resources at:
 - https://6502disassembly.com/va-missile-command/
+
+Historical Source for Sinistar source code at:
+https://github.com/historicalsource/sinistar
+
 
 ## What's next
 

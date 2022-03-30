@@ -6,7 +6,7 @@
 -- A tally of the number of continues appears at the top of screen.
 --
 -- Tested with latest MAME version 0.241
--- Fully compatible with all MAME versions from 0.196
+-- Compatible with all MAME versions from 0.196
 --
 -- Minimum start up arguments:
 --   mame mspacman -plugin continue
@@ -218,9 +218,7 @@ function continue.startplugin()
 				video.throttle_rate = 0.35 -- adjust emulation speed to allow more time for decision
 				sound.attenuation = -32 -- mute sounds
 			end
-			if _hide_stop and _hide_stop > i_frame then
-				scr:draw_box(0,8, 256, 232, BLK, BLK)  -- temporarily hide the play field
-			end
+			if _hide_stop and _hide_stop > i_frame then box(0,8, 256, 232, BLK, BLK) end  -- hide the playfield
 			if i_stop and i_stop > i_frame then
 				draw_continue_box(3)
 				if b_push_p1 then
@@ -252,11 +250,7 @@ function continue.startplugin()
 				video.throttle_rate = 0.17 -- -- adjust emulation speed to allow 10 seconds to make decision
 				sound.attenuation = -32  -- mute sounds
 			end
-
-			if _hide_stop and _hide_stop > i_frame then
-				scr:draw_box(8,17, 282, 228, BLK, BLK)  -- temporarily hide the play field
-			end
-
+			if _hide_stop and _hide_stop > i_frame then box(8,17, 282, 228, BLK, BLK) end  -- hide the playfield
 			if i_stop and i_stop > i_frame then
 				mem:write_u8(0x9848, 0)  -- switch off player collisions while waiting for decision
 				draw_continue_box(6)
@@ -523,7 +517,7 @@ function continue.startplugin()
 			if i_stop and i_stop > i_frame then
 				cpu.state["H"].value = 255  -- force delay timer to keep running
 				cpu.state["L"].value = 255
-				scr:draw_box(0, 224, 256, 80, BLK, BLK)  -- black background
+				box(0, 224, 256, 80, BLK, BLK)  -- partially hide the background
 				draw_continue_box()
 				if b_push_p1 then
 					mem:write_u8(0x80d8, h_start_lives + 1)
@@ -599,7 +593,7 @@ function continue.startplugin()
 			if i_stop and i_stop > i_frame then
 				mem:write_u8(0x21b, 160)  -- suspend game by setting the game mode counter
 				message_data = flip_table(message_data_rotated)
-				scr:draw_box(348, 248, 660, 280, BLK, BLK)  -- blackout the GAME OVER text
+				box(348, 248, 660, 280, BLK, BLK)  -- blackout the GAME OVER text
 				draw_continue_box()
 				if b_push_p1 then
 					i_tally = i_tally + 1
@@ -613,11 +607,14 @@ function continue.startplugin()
 	end
 
 	function snstr_func()
-		-- WORK IN PROGRESS
-		-- No commented rom disassembly available. I worked this one out using MAME debugger.
-		-- Useful map info from MAME Driver:
-		--   0000-8fff Video RAM
-    	--   9800-bfff RAM
+		-- Sinistar source at https://github.com/historicalsource/sinistar
+		r_tally_colors = {YEL, RED}  -- override tally colours
+		if not _ships then  -- Sprite for remaining ships which are redrawn after taking a continue
+			_ships = {};  _ships[1] = {0,0,0xffaeaea0,0 ,0};  _ships[2] = {0,0,0xffffffa0,0,0}
+			_ships[3] = {0,0xffffffa0,WHT,0xff8989a0,0};  _ships[4] = {0xff8989a0,0xffffffa0,WHT,0xff5176a0,0xff5176a0}
+			_ships[5] = {0xff00515f,0xff00515f,0xff8989a0,0xff00515f,0xff00515f}
+		end
+
 		h_mode = read(0x9896)  -- 1==attract mode, 0==playing
 		h_start_lives = 3
 		h_remain_lives = read(0x9ffc)
@@ -625,26 +622,40 @@ function continue.startplugin()
 		b_reset_tally = h_mode == 1 or not b_1p_game or i_tally == nil
 		b_show_tally = h_mode == 0
 		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[5] == 1
-
 		if _dead_cnt and read(0xa1ba, 1) then _dead_cnt = _dead_cnt + 1 else _dead_cnt = 0 end
 		b_almost_gameover = h_mode == 0 and h_remain_lives == 0 and read(0xa1ba, 1) and _dead_cnt == 40
+
+		if h_mode == 0 then  -- redraw remaining ships
+			if _dead_cnt > 0 then _draw_cnt = h_remain_lives else _draw_cnt = h_remain_lives - 1 end
+			for _i=1, _draw_cnt do draw_sprite(_ships, 251, 6 + (_i*6)) end
+		end
+
+		-- NOTE: Should we reset sinibombs on continue?  This game is hard as balls so maybe leave sinibombs for now.
 
 		-- Logic
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
-				i_stop = i_frame + 92
-				video.throttle_rate = 0.18 -- adjust emulation speed to allow 10 seconds to make decision
-				sound.attenuation = -32
+				i_stop = i_frame + 600
+				mem:write_direct_u8(0x7e0e, 0x7e) -- freeze game by introducing an infinite loop
+				mem:write_direct_u16(0x7e0f, 0x7e0c) --
 			end
-			if i_stop and i_stop > i_frame then
-				draw_continue_box(6)
+			if i_stop then
+				if i_frame > i_stop - 15 then
+					mem:write_direct_u8(0x7e0e, 0xb7) -- reset loop to unfreeze game
+					mem:write_direct_u16(0x7e0f, 0xca00)
+				end
+				if i_stop > i_frame then
+					draw_continue_box()
+					if b_push_p1 then
+						mem:write_direct_u8(0x7e0e, 0xb7) -- reset loop to unfreeze game
+						mem:write_direct_u16(0x7e0f, 0xca00)
 
-				if b_push_p1 then
-					i_tally = i_tally + 1
-					i_stop = nil
-					mem:write_u32(0x9ffd, 0x00000000)  -- reset score
-					mem:write_u8(0xa00b, 1)  -- update score flag
-					mem:write_u8(0x9ffc, h_start_lives)
+						i_tally = i_tally + 1
+						i_stop = nil
+						mem:write_u32(0x9ffd, 0x00000000)  -- reset score
+						mem:write_u8(0xa00b, 1)  -- update score flag
+						mem:write_u8(0x9ffc, h_start_lives)
+					end
 				end
 			end
 		end
@@ -716,7 +727,7 @@ function continue.startplugin()
 		end
 	end
 
-	function draw_graphic(data, pos_y, pos_x, percent, speed_factor)
+	function draw_continue_graphic(data, pos_y, pos_x, percent, speed_factor)
 		local _len, _sub, _byte, _floor = string.len, string.sub, string.byte, math.floor
 		local _per = percent  or 100
 		local _speed = speed_factor or 1
@@ -738,10 +749,10 @@ function continue.startplugin()
 				elseif (_pixel >= "a" and _pixel <= "z") or (_pixel >= "A" and _pixel <= "Z") then
 					if r_rotate then _wide = 7 else _wide = 2 end
 					if _byte(_index) and _byte(_pixel) <= _byte(_index) then
-						if _pos <= (15/_speed) and (_speed > 1 or _per % 4 > 2) then _col = RED else _col = r_color end
+						if _pos <= (20/_speed) and (_speed > 1 or _per % 4 > 2) then _col = RED else _col = r_color end
 					end
 				end
-				scr:draw_box(pos_y-(_y*r_scale), pos_x+_x, pos_y-(_y*r_scale)+r_scale, pos_x+_x+_wide, _col, _col)
+				box(pos_y-(_y*r_scale), pos_x+_x, pos_y-(_y*r_scale)+r_scale, pos_x+_x+_wide, _col, 0)
 				_x = _x + _wide
 			end
 		end
@@ -752,9 +763,9 @@ function continue.startplugin()
 		_cnt = math.floor((i_stop - i_frame) / 6) + 1
 		local _y, _x = r_yx[1], r_yx[2]
 		if r_flip then
-			draw_graphic(message_data, _y+(24*r_scale), _x+(7*r_scale), _cnt, _speed)
+			draw_continue_graphic(message_data, _y+(24*r_scale), _x+(7*r_scale), _cnt, _speed)
 		else
-			draw_graphic(message_data, _y+(40*r_scale), _x+(7*r_scale), _cnt, _speed)
+			draw_continue_graphic(message_data, _y+(40*r_scale), _x+(7*r_scale), _cnt, _speed)
 		end
 	end
 
@@ -765,12 +776,28 @@ function continue.startplugin()
 		for _i=0, n - 1 do
 			_col = r_tally_colors[((math.floor(_i / 5)) % 2) + 1]
 			if r_flip and not r_rotate then
-				scr:draw_box(_y-1, _x-(_i*4)-1, _y+(4*r_scale)+1, _x+2-(_i*4)+1, BLK ,BLK)  -- black background
-				scr:draw_box(_y, _x-(_i*4), _y+(4*r_scale), _x+2-(_i*4), _col ,_col)  --flipped
+				box(_y-1, _x-(_i*4)-1, _y+(4*r_scale)+1, _x+2-(_i*4)+1, BLK ,BLK)  -- black background
+				box(_y, _x-(_i*4), _y+(4*r_scale), _x+2-(_i*4), _col ,_col)  --flipped
 			else
-				scr:draw_box(_y-1, _x+(_i*4)-1, _y+(4*r_scale)+1, _x+2+(_i*4)+1, BLK ,BLK) -- black background
-				scr:draw_box(_y, _x+(_i*4), _y+(4*r_scale), _x+2+(_i*4), _col ,_col) -- regular
+				box(_y-1, _x+(_i*4)-1, _y+(4*r_scale)+1, _x+2+(_i*4)+1, BLK ,BLK) -- black background
+				box(_y, _x+(_i*4), _y+(4*r_scale), _x+2+(_i*4), _col ,col) -- regular
 			end
+		end
+	end
+
+	function draw_sprite(data, y, x)
+		-- draw a matrix of coloured sprites as y,x position
+		for _row=1, #data do for _col=1, #data[_row] do
+			box(y-_row-1, x+_col-1, y-_row, x+_col, data[_row][_col], 0)
+		end end
+	end
+
+	function box(y1, x1, y2, x2, c1, c2)
+		-- Handle the version specific arguments of draw_box
+		if tonumber(emu.app_version()) >= 0.227 then
+			scr:draw_box(y1, x1, y2, x2, c2, c1)
+		else
+			scr:draw_box(y1, x1, y2, x2, c1, c2)
 		end
 	end
 
