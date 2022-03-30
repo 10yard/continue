@@ -25,7 +25,7 @@ function continue.startplugin()
 
 	-- general use variables
 	local h_mode, h_start_lives, h_remain_lives
-	local i_frame, i_stop, i_tally, i_attenuation
+	local i_frame, i_stop, i_start, i_tally, i_attenuation
 	local b_1p_game, b_game_restart, b_almost_gameover, b_reset_continue, b_reset_tally, b_show_tally, b_push_p1
 
 	-- colours
@@ -71,7 +71,7 @@ function continue.startplugin()
 	rom_table["robotron12"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
 	rom_table["robotronyo"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
 	rom_table["robotron87"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
-	rom_table["sinistar"]   = {"snstr_func", {287,000}, {102,060}, WHT, false, false, 1}
+	rom_table["sinistar"]   = {"snstr_func", {287,000}, {102,052}, WHT, false, false, 1}
 
 	-- encoded message data
 	message_data = {"*","*","*","*","*","*","*","*","8&@2@3@2&3@3@9&@5@93&4&@3@!3&@3&@8","8@3@1@3@1@2@2@3@9@3@3@!92@2@5@4@1@2@3@4@91",
@@ -608,11 +608,11 @@ function continue.startplugin()
 
 	function snstr_func()
 		-- Sinistar source at https://github.com/historicalsource/sinistar
-		r_tally_colors = {YEL, RED}  -- override tally colours
-		if not _ships then  -- Sprite for remaining ships which are redrawn after taking a continue
-			_ships = {};  _ships[1] = {0,0,0xffaeaea0,0 ,0};  _ships[2] = {0,0,0xffffffa0,0,0}
-			_ships[3] = {0,0xffffffa0,WHT,0xff8989a0,0};  _ships[4] = {0xff8989a0,0xffffffa0,WHT,0xff5176a0,0xff5176a0}
-			_ships[5] = {0xff00515f,0xff00515f,0xff8989a0,0xff00515f,0xff00515f}
+		-- NOTE: Should we reset sinibombs on continue?  This game is hard as balls so maybe keep sinibombs for now.
+		r_tally_colors = {0xffffd900, 0xffff0000}  -- override tally colours
+		if not _ships then _ships={}; _ships[1]={0,0,0xffaeaea0,0,0}; _ships[2]={0,0,0xffffffa0,0,0}; -- ship sprite
+			_ships[3]={0,0xffffffa0,WHT,0xff8989a0,0}; _ships[4]={0xff8989a0,0xffffffa0,WHT,0xff5176a0,0xffff5176a0};
+			_ships[5]={0xff00515f,0xff00515f,0xff8989a0,0xff00515f,0xff00515f}
 		end
 
 		h_mode = read(0x9896)  -- 1==attract mode, 0==playing
@@ -626,30 +626,24 @@ function continue.startplugin()
 		b_almost_gameover = h_mode == 0 and h_remain_lives == 0 and read(0xa1ba, 1) and _dead_cnt == 40
 
 		if h_mode == 0 then  -- redraw remaining ships
-			if _dead_cnt > 0 then _draw_cnt = h_remain_lives else _draw_cnt = h_remain_lives - 1 end
-			for _i=1, _draw_cnt do draw_sprite(_ships, 251, 6 + (_i*6)) end
+			for _i=1, h_remain_lives - bool_to_int(dead_cnt and dead_cnt > 0) do draw_sprite(_ships,251,6+(_i*6)) end
 		end
-
-		-- NOTE: Should we reset sinibombs on continue?  This game is hard as balls so maybe leave sinibombs for now.
 
 		-- Logic
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
-				i_stop = i_frame + 600
-				mem:write_direct_u8(0x7e0e, 0x7e) -- freeze game by introducing an infinite loop
-				mem:write_direct_u16(0x7e0f, 0x7e0c) --
+				i_start = i_frame
+				i_stop = i_frame + 630
+				mem:write_direct_u32(0x7e0e, 0x7e7e0c33)  -- freeze game by injecting an infinite loop
 			end
 			if i_stop then
 				if i_frame > i_stop - 15 then
-					mem:write_direct_u8(0x7e0e, 0xb7) -- reset loop to unfreeze game
-					mem:write_direct_u16(0x7e0f, 0xca00)
+					mem:write_direct_u32(0x7e0e, 0xb7ca0033)  -- unfreeze game shortly before countdown ends
 				end
-				if i_stop > i_frame then
+				if (i_stop > i_frame) and (i_frame > i_start + 30) then  -- allow 30 frames for infinite loop logic
 					draw_continue_box()
 					if b_push_p1 then
-						mem:write_direct_u8(0x7e0e, 0xb7) -- reset loop to unfreeze game
-						mem:write_direct_u16(0x7e0f, 0xca00)
-
+						mem:write_direct_u32(0x7e0e, 0xb7ca0033)   -- unfreeze game
 						i_tally = i_tally + 1
 						i_stop = nil
 						mem:write_u32(0x9ffd, 0x00000000)  -- reset score
@@ -780,7 +774,7 @@ function continue.startplugin()
 				box(_y, _x-(_i*4), _y+(4*r_scale), _x+2-(_i*4), _col ,_col)  --flipped
 			else
 				box(_y-1, _x+(_i*4)-1, _y+(4*r_scale)+1, _x+2+(_i*4)+1, BLK ,BLK) -- black background
-				box(_y, _x+(_i*4), _y+(4*r_scale), _x+2+(_i*4), _col ,col) -- regular
+				box(_y, _x+(_i*4), _y+(4*r_scale), _x+2+(_i*4), _col ,_col) -- regular
 			end
 		end
 	end
@@ -807,6 +801,10 @@ function continue.startplugin()
 			_f[#t+1-k] = string.reverse(v)
 		end
 		return _f
+	end
+
+	function bool_to_int(boolean)
+		if boolean then return 1 else return 0 end
 	end
 
 	function to_bits(num)
