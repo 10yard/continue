@@ -7,7 +7,7 @@ The continue option will appear before your game is over with a 10 second countd
 A tally of the number of continues made will appear at the top of the screen.
 
 
-![Continue Plugin Screenshot](https://i.imgur.com/4rnfvYl.png)
+![Continue Plugin Screenshot](https://i.imgur.com/q41CC7c.png)
 
 
 The plugin currently supports these games:

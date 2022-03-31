@@ -71,7 +71,7 @@ function continue.startplugin()
 	rom_table["robotron12"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
 	rom_table["robotronyo"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
 	rom_table["robotron87"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
-	rom_table["sinistar"]   = {"snstr_func", {287,000}, {102,052}, WHT, false, false, 1}
+	rom_table["sinistar"]   = {"snstr_func", {287,001}, {102,052}, WHT, false, false, 1}
 
 	-- encoded message data
 	message_data = {"*","*","*","*","*","*","*","*","8&@2@3@2&3@3@9&@5@93&4&@3@!3&@3&@8","8@3@1@3@1@2@2@3@9@3@3@!92@2@5@4@1@2@3@4@91",
@@ -610,7 +610,8 @@ function continue.startplugin()
 		-- Sinistar source at https://github.com/historicalsource/sinistar
 		-- NOTE: Should we reset sinibombs on continue?  This game is hard as balls so maybe keep sinibombs for now.
 		r_tally_colors = {0xffffd900, 0xffff0000}  -- override tally colours
-		if not _ships then _ships={}; _ships[1]={0,0,0xffaeaea0,0,0}; _ships[2]={0,0,0xffffffa0,0,0}; -- ship sprite
+		if not _ships then  --  ship sprite used for redraws
+			_ships={}; _ships[1]={0,0,0xffaeaea0,0,0}; _ships[2]={0,0,0xffffffa0,0,0};
 			_ships[3]={0,0xffffffa0,WHT,0xff8989a0,0}; _ships[4]={0xff8989a0,0xffffffa0,WHT,0xff5176a0,0xffff5176a0};
 			_ships[5]={0xff00515f,0xff00515f,0xff8989a0,0xff00515f,0xff00515f}
 		end
@@ -633,22 +634,22 @@ function continue.startplugin()
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
 				i_start = i_frame
-				i_stop = i_frame + 630
+				i_stop = i_frame + 610
 				mem:write_direct_u32(0x7e0e, 0x7e7e0c33)  -- freeze game by injecting an infinite loop
 			end
 			if i_stop then
-				if i_frame > i_stop - 15 then
-					mem:write_direct_u32(0x7e0e, 0xb7ca0033)  -- unfreeze game shortly before countdown ends
+				if i_frame > i_stop - 10 then
+					mem:write_direct_u32(0x7e0e, 0xb7ca0033)  -- unfreeze game before countdown ends
 				end
-				if (i_stop > i_frame) and (i_frame > i_start + 30) then  -- allow 30 frames for infinite loop logic
+				if (i_stop > i_frame) and (i_frame > i_start + 10) then  -- allow 10 frames for infinite loop logic reset
 					draw_continue_box()
-					if b_push_p1 then
+					if b_push_p1 and cpu.state["PC"].value ~= 0x7e0f then
 						mem:write_direct_u32(0x7e0e, 0xb7ca0033)   -- unfreeze game
 						i_tally = i_tally + 1
 						i_stop = nil
 						mem:write_u32(0x9ffd, 0x00000000)  -- reset score
 						mem:write_u8(0xa00b, 1)  -- update score flag
-						mem:write_u8(0x9ffc, h_start_lives)
+						mem:write_u8(0x9ffc, h_start_lives)  -- reset lives
 					end
 				end
 			end
