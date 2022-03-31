@@ -620,7 +620,7 @@ function continue.startplugin()
 		h_start_lives = 3
 		h_remain_lives = read(0x9ffc)
 		b_1p_game = read(0x988a, 1)
-		b_reset_tally = h_mode == 1 or not b_1p_game or i_tally == nil
+		b_reset_tally = not b_1p_game or i_tally == nil
 		b_show_tally = h_mode == 0
 		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[5] == 1
 		if _dead_cnt and read(0xa1ba, 1) then _dead_cnt = _dead_cnt + 1 else _dead_cnt = 0 end
