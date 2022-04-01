@@ -5,7 +5,7 @@
 -- Push P1-Start button to continue your game and your score will be reset.
 -- A tally of the number of continues appears at the top of screen.
 --
--- Tested with latest MAME version 0.241
+-- Tested with latest MAME version 0.242
 -- Compatible with all MAME versions from 0.196
 --
 -- Minimum start up arguments:
@@ -36,10 +36,11 @@ function continue.startplugin()
 	local r_function, r_tally_yx, r_yx, r_color, r_flip, r_rotate, r_scale, r_tally_colors
 	-- supported rom name     function       tally yx    msg yx    col  flip   rotate scale
 	rom_table["asteroid"]   = {"aster_func", {008,008}, {540,240}, WHT, false, true,  2}
-	rom_table["berzerk"]    = {"bzerk_func", {-01,000}, {160,072}, YEL, true,  true,  1}
+	rom_table["berzerk"]    = {"bzerk_func", {-01,001}, {160,072}, YEL, true,  true,  1}
 	rom_table["bzone"]      = {"bzone_func", {008,008}, {320,160}, WHT, true,  true,  1}
 	rom_table["centiped"]   = {"centi_func", {001,001}, {102,054}, GRN, false, false, 1}
 	rom_table["cclimber"]   = {"climb_func", {010,049}, {156,080}, CYN, true,  true,  1}
+	rom_table["defender"]   = {"dfend_func", {008,008}, {096,044}, CYN, false, false, 1}  -- WIP
 	rom_table["dkong"]      = {"dkong_func", {234,009}, {096,044}, CYN, false, false, 1}
 	rom_table["dkongx"]     = {"dkong_func", {234,009}, {096,044}, CYN, false, false, 1}
 	rom_table["dkongx11"]   = {"dkong_func", {234,009}, {096,044}, CYN, false, false, 1}
@@ -49,9 +50,9 @@ function continue.startplugin()
 	rom_table["dkongj"]     = {"dkong_func", {234,009}, {096,044}, CYN, false, false, 1}
 	rom_table["dkongjr"]    = {"dkong_func", {234,002}, {096,044}, YEL, false, false, 1}
 	rom_table["frogger"]    = {"frogr_func", {052,219}, {336,032}, WHT, true,  false, 3}
-	rom_table["galaga"]     = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
-	rom_table["galagamf"]   = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
-	rom_table["galagamk"]   = {"galag_func", {016,219}, {102,045}, WHT, true,  false, 1}
+	rom_table["galaga"]     = {"galag_func", {016,219}, {092,045}, WHT, true,  false, 1}
+	rom_table["galagamf"]   = {"galag_func", {016,219}, {092,045}, WHT, true,  false, 1}
+	rom_table["galagamk"]   = {"galag_func", {016,219}, {092,045}, WHT, true,  false, 1}
 	rom_table["galaxian"]   = {"galax_func", {052,216}, {328,032}, WHT, true,  false, 3}
 	rom_table["superg"]     = {"galax_func", {052,216}, {328,032}, WHT, true,  false, 3}
 	rom_table["moonaln"]    = {"galax_func", {052,216}, {328,032}, WHT, true,  false, 3}
@@ -98,14 +99,34 @@ function continue.startplugin()
 	---------------------------------------------------------------------------
 	-- Game specific functions
 	---------------------------------------------------------------------------
+	function dfend_func()
+		-- Work in progress
+		-- ROM disassembly at https://computerarcheology.com/Arcade/Defender
+		h_remain_lives = read(0xa1c9)
+		b_show_tally = true
+		b_reset_tally = true
+		i_stop = true -- testing
+		b_push_p1 = i_stop and to_bits(ports[":IN0"]:read())[6] == 1
+		b_almost_gameover = h_remain_lives == 0 and read(0xa031, 7)  -- death flag goes from 00 (alive) to FF (dead)
+
+		-- see file phr6.src
+		-- for reference: credits are at 0xa037
+		--some timer = a06e
+
+		if b_almost_gameover then
+			reset(0xa1c2, 5)  -- reset score
+			mem:write_u8(0xa1c9, 3)  -- reset lives
+		end
+	end
+
 	function bzerk_func()
 		-- ROM disassembly at http://seanriddle.com/berzerk.asm
 		h_mode = read(0x436e)  --0=playing, otherwise demo mode
 		h_remain_lives = read(0x4349)
 		h_start_lives = 3
 		b_1p_game = read(0x4376, 1)
-		b_show_tally = h_mode == 0 and read(0x4344,1) -- 1 player playing and not in demo mode
-		b_reset_tally = h_mode ~= 0 or not read(0x4344,1) or i_tally == nil
+		b_show_tally = h_mode == 0 and read(0x4344, 1) -- 1 player playing and not in demo mode
+		b_reset_tally = h_mode ~= 0 or not read(0x4344, 1) or i_tally == nil
 		b_push_p1 = i_stop and to_bits(ports[":SYSTEM"]:read())[1] == 0
 
 		_hit = read(mem:read_u16(0x0876)) >= 128 -- read player vector structure to determine if player was hit
@@ -120,11 +141,10 @@ function continue.startplugin()
 			if i_stop and i_stop > i_frame then
 				draw_continue_box(5)
 				if b_push_p1 then
-					i_tally = i_tally + 1
-					i_stop = nil
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0x4349, h_start_lives + 1)
-					for _addr=0x433e, 0x4340 do mem:write_u8(_addr, 0) end -- reset score in memory
-					mem:write_u8(0x436d, 0xff) -- set score update flag
+					reset(0x433e, 3)  -- reset score in memory
+					reset(0x436d, 1, 0xff)  -- set score update flag
 				end
 			end
 		end
@@ -145,22 +165,18 @@ function continue.startplugin()
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
 				i_stop = i_frame + 600
-				_enemy = {read(0x2f), read(0x30), read(0x33), read(0x34)}
+				_enemy = {mem:read_u16(0x2f), mem:read_u16(0x33)}
 			end
 			if i_stop and i_stop > i_frame then
 				mem:write_u8(0xc7, 30)  -- suspend game
-				mem:write_u8(0x2f, _enemy[1])  -- freeze the enemy locations
-				mem:write_u8(0x30, _enemy[2])
-				mem:write_u8(0x33, _enemy[3])
-				mem:write_u8(0x34, _enemy[4])
+				mem:write_u16(0x2f, _enemy[1])  -- freeze the enemy locations
+				mem:write_u16(0x33, _enemy[2])
 				draw_continue_box()
 				if b_push_p1 then
-					i_tally = i_tally + 1
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0xcc, h_start_lives)
 					mem:write_u8(0xcd, 0)  -- set alive flag
-					i_stop = nil
-					-- reset score in memory
-					for _addr=0xb8, 0xb9 do	mem:write_u8(_addr, 0) end
+					reset(0xb8, 2) -- reset score in memory
 				end
 			end
 		end
@@ -185,10 +201,9 @@ function continue.startplugin()
 				mem:write_u8(0x87, 20)  -- suspend game
 				draw_continue_box()
 				if b_push_p1 then
-					i_tally = i_tally + 1
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0xa5, h_start_lives)
-					i_stop = nil
-					for _addr=0xa8, 0xad do mem:write_u8(_addr, 0) end -- reset score in memory
+					reset(0xa8, 6) -- reset score in memory
 				end
 			end
 		end
@@ -222,12 +237,11 @@ function continue.startplugin()
 			if i_stop and i_stop > i_frame then
 				draw_continue_box(3)
 				if b_push_p1 then
-					i_tally = i_tally + 1
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0xc0, h_start_lives)
 					mem:write_u8(0xcf, 0)
-					i_stop = nil
-					for _add = 0x01d6, 0x01db do  mem:write_u8(_add, 0) end  -- reset score in memory
-					mem:write_u8(0xd4, 0xff)  -- set flag to redraw the score
+					reset(0x01d6, 6) -- reset score in memory
+					reset(0xd4, 1, 0xff) -- set flag to redraw the score
 				end
 			end
 		end
@@ -241,7 +255,7 @@ function continue.startplugin()
 		b_push_p1 = i_stop and to_bits(ports[":IN0"]:read())[5] == 1
 		b_reset_tally = h_mode ~= 2 or i_tally == nil
 		b_show_tally = b_1p_game and h_mode == 2
-		b_almost_gameover = h_mode == 2 and h_remain_lives == 0 and read(0x9859) == 0x1b  -- 0x1b when player dies
+		b_almost_gameover = h_mode == 2 and h_remain_lives == 0 and read(0x9859, 0x1b)  -- 0x1b when player dies
 
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
@@ -255,10 +269,9 @@ function continue.startplugin()
 				mem:write_u8(0x9848, 0)  -- switch off player collisions while waiting for decision
 				draw_continue_box(6)
 				if b_push_p1 then
-					i_tally = i_tally + 1
-					i_stop = nil
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0xbdec, h_start_lives)
-					for _addr=0xbde4, 0xbde7 do mem:write_u8(_addr, 0x00) end  -- reset score in memory
+					reset(0xbde4, 4)  -- reset score in memory
 				end
 			end
 		end
@@ -277,7 +290,7 @@ function continue.startplugin()
 		if _dead then _dead_count = _dead_count + 1 else _dead_count = 0 end -- count the dead status flag
 		b_almost_gameover = h_remain_lives == 1 and _dead and _dead_count == 50 -- react to dead status at 50 ticks
 		b_reset_tally = h_mode == 0xf4 or i_tally == nil
-		b_show_tally = h_remain_lives >= 1 and h_mode ~=0xf4 and read(0x3da3) ~= 0xa5  --0xa5 is a tile on level screen
+		b_show_tally = h_remain_lives >= 1 and h_mode ~=0xf4 and not read(0x3da3, 0xa5) --0xa5 is a tile on level screen
 		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[1] == 1
 
 		-- Logic
@@ -296,24 +309,14 @@ function continue.startplugin()
 				draw_continue_box()
 
 				if b_push_p1 then
-					i_tally = i_tally + 1
-					i_stop = nil
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0xd00, h_start_lives + 1)
-
-					-- reset counter to fix a glitch wih blank lines being written to screen.  Assume these blank lines
-					-- were removing the lives from screen.`
-					mem:write_u8(0xd24, 0x30)
-
-					-- reset score in memory (do we need to clear more bytes?)
-					for _addr=0xbc, 0xc1 do mem:write_u8(_addr, 0) end
-
-					-- and also here in memory
-					for _addr=0xc6, 0xca do mem:write_u8(_addr, 0x24) end
-					for _addr=0xcb, 0xcd do mem:write_u8(_addr, 0x0) end
-
-					-- and also on screen
-					mem:write_u8(0x385c, 0x0)
-					for _addr=0x387c, 0x397c, 0x20 do mem:write_u8(_addr, 0x24) end
+					mem:write_u8(0xd24, 0x30)  -- reset counter to fix a glitch wih blank lines being written to screen
+					reset(0xbc, 6)  -- reset score in memory (do we need to clear more bytes?)
+					reset(0xcb, 3) -- and also here in memory
+					reset(0xc6, 5, 0x24)  -- and also here in memory
+					reset(0x385c, 1)  -- reset score on screen
+					for _addr=0x387c, 0x397c, 0x20 do reset(_addr, 1, 0x24) end  -- also here on screen
 				end
 			end
 		end
@@ -339,11 +342,10 @@ function continue.startplugin()
 				mem:write_u8(0x6009, 8) -- suspend game
 				draw_continue_box()
 				if b_push_p1 then
-					i_tally = i_tally + 1
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0x6228, h_start_lives + 1)
-					i_stop = nil
-					for _add = 0x60b2, 0x60b4 do  mem:write_u8(_add, 0) end  -- reset score in memory
-					for _add = 0x76e1, 0x7781, 0x20 do  mem:write_u8(_add, 0) end  -- reset score on screen
+					reset(0x60b2, 3)  -- reset score in memory
+					for _addr = 0x76e1, 0x7781, 0x20 do reset(_addr, 1) end  -- reset score on screen
 				end
 			end
 		end
@@ -372,13 +374,12 @@ function continue.startplugin()
 				mem:write_u8(0x4205, 0x10)  -- suspend game by setting the animation counter
 				draw_continue_box()
 				if b_push_p1 then
-					i_tally = i_tally + 1
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0x421d, h_start_lives)
-					i_stop = nil
-					for _add = 0x40a2, 0x40a4 do  mem:write_u8(_add, 0) end  -- reset score in memory
-					for _add = 0x52e1, 0x53a1, 0x20 do mem:write_u8(_add, 16) end  -- reset onscreen score
-					mem:write_u8(0x5301, 0)  -- rightmost zeros on screen
-					mem:write_u8(0x52e1, 0)  -- rightmost zeros on screen
+					reset(0x40a2, 3) -- reset score in memory
+					for _addr = 0x52e1, 0x53a1, 0x20 do reset(_addr, 1, 16) end  -- reset score on screen
+					reset(0x5301, 1) -- rightmost zeros on screen
+					reset(0x52e1, 1) -- rightmost zeros on screen
 				end
 			end
 		end
@@ -395,9 +396,9 @@ function continue.startplugin()
 		b_push_p1 = i_stop and to_bits(ports[':IN1']:read())[3] == 0
 
 		-- check video ram for "CAPT" (part of FIGHTER CAPTURED message)
-		_capt = read(0x81f1) == 0xc and read(0x81d1) == 0xa and read(0x81b1) == 0x19 and read(0x8191) == 0x1d
+		_capt = read(0x81f1, 0xc) and read(0x81d1, 0xa) and read(0x81b1, 0x19) and read(0x8191, 0x1d)
 		-- no more ships and (explosion animation almost done or fighter was captured)
-		b_almost_gameover = read(0x9820) == 0 and (read(0x8863) == 3 or _capt)
+		b_almost_gameover = read(0x9820, 0) and (read(0x8863, 3) or _capt)
 
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
@@ -409,11 +410,10 @@ function continue.startplugin()
 				end
 				draw_continue_box()
 				if b_push_p1 then
-					i_tally = i_tally + 1
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0x9820, h_start_lives)
-					i_stop = nil
-					mem:write_u8(0x83f9, 0) -- reset score in memory
-					for _add = 0x83fa, 0x83fe do mem:write_u8(_add, 36) end  -- reset score on screen
+					reset(0x83f9, 1) -- reset score in memory
+					reset(0x83fa, 5, 0x24) -- reset score on screen
 				end
 			end
 		end
@@ -427,7 +427,7 @@ function continue.startplugin()
 		h_mode = read(0x803f) -- 1=not playing, 3=playing game (can mean attract mode too)
 		h_start_lives = read(0x83e4)
 		h_remain_lives = read(0x83e5)
-		b_1p_game = read(0x83fe) == 1
+		b_1p_game = read(0x83fe, 1)
 		b_push_p1 = i_stop and not to_bits(ports[":IN1"]:read())[8]
 		b_reset_tally = h_mode == 1 or i_tally == nil
 		b_show_tally = h_mode == 3 and b_1p_game
@@ -445,17 +445,14 @@ function continue.startplugin()
 				sound.attenuation = -32  -- mute sounds
 			end
 			if i_stop and i_stop > i_frame then
-				cpu.state["H"].value = 255  -- force delay timer to keep running
-				cpu.state["L"].value = 255
-
+				cpu.state["HL"].value = 0xffff  -- force delay timer to keep running
 				draw_continue_box()
 				if b_push_p1 then
-					i_tally = i_tally + 1
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0x83e5, h_start_lives + 1)
 					mem:write_u8(0x83ae, 1)
 					mem:write_u8(0x83ea, 0)
-					i_stop = nil
-					for _add = 0x83ec, 0x83ee do  mem:write_u8(_add, 0) end  -- reset score in memory
+					reset(0x83ec, 3)  -- reset score in memory
 				end
 			end
 		end
@@ -470,7 +467,7 @@ function continue.startplugin()
 		b_show_tally = h_mode == 1
 		b_push_p1 = i_stop and to_bits(ports[':IN1']:read())[3] == 1
 		-- player was blown up on last life. Animation sprite and timer indicate a specific frame
-		b_almost_gameover = read(0x2015) < 128 and h_remain_lives == 0 and read(0x2016) == 1 and read(0x2017) == 1
+		b_almost_gameover = read(0x2015) < 128 and h_remain_lives == 0 and read(0x2016, 1) and read(0x2017, 1)
 		h_start_lives = 3
 		if to_bits(ports[':IN2']:read())[1] == 1 then h_start_lives = h_start_lives + 1 end  -- dip adjust start lives
 		if to_bits(ports[':IN2']:read())[2] == 1 then h_start_lives = h_start_lives + 1 end  -- ...and the next dip
@@ -483,18 +480,16 @@ function continue.startplugin()
 				mem:write_u8(0x20e9, 0) -- suspend game
 				draw_continue_box()
 				if b_push_p1 then
-					i_tally = i_tally + 1
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0x21ff, h_start_lives)
-					i_stop = nil
 					mem:write_u8(0x20e9, 1) -- unsuspend game
-					mem:write_u16(0x20f8, 0x0000) --update score in memory
-					mem:write_u16(0x20f1, 0x0001) -- dummy screen update - by pushing 0 score adjustment
+					reset(0x20f8, 2)  -- update score in memory
+					reset(0x20f1, 1, 1) -- adjust score flag for dummy screen update
 				end
 			else
 				mem:write_u8(0x20e9, 1) -- unsuspend game
-				-- dummy screen update - by pushing 0 score adjustment
-				mem:write_u8(0x20f1,1)  -- adjust score flag
-				mem:write_u8(0x20f2,0)  -- score adjustment
+				reset(0x20f1, 1, 1) -- adjust score flag for dummy screen update
+				reset(0x20f2, 2) -- score adjustment
 			end
 		end
 	end
@@ -515,16 +510,14 @@ function continue.startplugin()
 				i_stop = i_frame + 600
 			end
 			if i_stop and i_stop > i_frame then
-				cpu.state["H"].value = 255  -- force delay timer to keep running
-				cpu.state["L"].value = 255
+				cpu.state["HL"].value = 0xffff  -- force delay timer to keep running
 				box(0, 224, 256, 80, BLK, BLK)  -- partially hide the background
 				draw_continue_box()
 				if b_push_p1 then
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0x80d8, h_start_lives + 1)
 					mem:write_u8(0x8073, 1)
-					i_stop = nil
-					i_tally = i_tally + 1
-					for _addr=0x80d9, 0x80db do mem:write_u8(_addr, 0) end -- reset score in memory
+					reset(0x80d9, 3)  -- reset score in memory
 				end
 			end
 		end
@@ -553,18 +546,12 @@ function continue.startplugin()
 				mem:write_u8(0x4e04, 4)  -- suspend game
 				draw_continue_box()
 				if b_push_p1 then
-					i_tally = i_tally + 1
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0x4e04, 0)  -- unsuspend
 					mem:write_u8(0x4e14, h_start_lives)  --update number of lives
 					mem:write_u8(0x4e15, h_start_lives - 1)  --update displayed number of lives
-					i_stop = nil
-
-					for _addr = 0x4e80, 0x4e82 do mem:write_u8(_addr, 0) end  -- reset score in memory
-					--reset score on screen
-					for _i=0, 7 do
-						if _i < 2 then _v = 0 else _v = 64 end
-						mem:write_u8(0x43f7 + _i, _v)
-					end
+					reset(0x4e80, 3) -- reset score in memory
+					for _i=0,7 do if _i < 2 then _v=0 else _v=64 end reset(0x43f7+_i,1,_v) end  --reset score on screen
 				end
 			end
 			if b_game_restart then
@@ -596,11 +583,10 @@ function continue.startplugin()
 				box(348, 248, 660, 280, BLK, BLK)  -- blackout the GAME OVER text
 				draw_continue_box()
 				if b_push_p1 then
-					i_tally = i_tally + 1
+					i_tally = i_tally + 1 ; i_stop = nil
 					mem:write_u8(0x57, h_start_lives)
-					i_stop = nil
 					mem:write_u8(0x21b, 200)  -- skip some of the explosion animation
-					mem:write_u16(0x52, 0x0000) --reset score in memory
+					reset(0x52, 2)  --reset score in memory
 				end
 			end
 		end
@@ -610,9 +596,9 @@ function continue.startplugin()
 		-- Sinistar source at https://github.com/historicalsource/sinistar
 		-- NOTE: Should we reset sinibombs on continue?  This game is hard as balls so maybe keep sinibombs for now.
 		r_tally_colors = {0xffffd900, 0xffff0000}  -- override tally colours
-		if not _ships then  --  ship sprite used for redraws
-			_ships={}; _ships[1]={0,0,0xffaeaea0,0,0}; _ships[2]={0,0,0xffffffa0,0,0};
-			_ships[3]={0,0xffffffa0,WHT,0xff8989a0,0}; _ships[4]={0xff8989a0,0xffffffa0,WHT,0xff5176a0,0xffff5176a0};
+		if not _ships then _ships={}; --  ship sprite used for redraws
+			_ships[1]={0,0,0xffaeaea0,0,0}; _ships[2]={0,0,0xffffffa0,0,0}; _ships[3]={0,0xffffffa0,WHT,0xff8989a0,0};
+			_ships[4]={0xff8989a0,0xffffffa0,WHT,0xff5176a0,0xffff5176a0};
 			_ships[5]={0xff00515f,0xff00515f,0xff8989a0,0xff00515f,0xff00515f}
 		end
 
@@ -643,13 +629,12 @@ function continue.startplugin()
 				end
 				if (i_stop > i_frame) and (i_frame > i_start + 10) then  -- allow 10 frames for infinite loop logic reset
 					draw_continue_box()
-					if b_push_p1 and cpu.state["PC"].value ~= 0x7e0f then
+					if b_push_p1 and cpu.state["PC"].value ~= 0x7e0f then  -- prevent lock up by avoiding specific PC
+						i_tally = i_tally + 1 ; i_stop = nil
 						mem:write_direct_u32(0x7e0e, 0xb7ca0033)   -- unfreeze game
-						i_tally = i_tally + 1
-						i_stop = nil
-						mem:write_u32(0x9ffd, 0x00000000)  -- reset score
-						mem:write_u8(0xa00b, 1)  -- update score flag
 						mem:write_u8(0x9ffc, h_start_lives)  -- reset lives
+						reset(0x9ffd, 4)  -- reset score
+						reset(0xa00b, 1, 1)  -- update score changed flag
 					end
 				end
 			end
@@ -826,6 +811,15 @@ function continue.startplugin()
 			return _d == comparison
 		else
 			return _d
+		end
+	end
+
+	function reset(start_address, number, value)
+		-- Reset a number of addresses from the specified offset.  Default value being 0.
+		_value = value or 0x0
+		_end_address = start_address + number - 1  -- including the start address
+		for _addr=start_address, _end_address do
+			mem:write_u8(_addr, _value)
 		end
 	end
 

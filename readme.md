@@ -42,7 +42,7 @@ Other variants of these games are also supported (including):
 - DK Remix Editions
 
 
-Tested with latest MAME version 0.241
+Tested with latest MAME version 0.242
 
 Compatible with all MAME versions from 0.196
 
