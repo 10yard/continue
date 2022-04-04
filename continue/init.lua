@@ -40,7 +40,7 @@ function continue.startplugin()
 	rom_table["bzone"]      = {"bzone_func", {008,008}, {320,160}, WHT, true,  true,  1}
 	rom_table["centiped"]   = {"centi_func", {001,001}, {102,054}, GRN, false, false, 1}
 	rom_table["cclimber"]   = {"climb_func", {010,049}, {156,080}, CYN, true,  true,  1}
-	rom_table["defender"]   = {"dfend_func", {008,008}, {096,044}, CYN, false, false, 1}  -- WIP
+	rom_table["defender"]   = {"dfend_func", {000,001}, {188,080}, YEL, true,  true,  1}
 	rom_table["dkong"]      = {"dkong_func", {234,009}, {096,044}, CYN, false, false, 1}
 	rom_table["dkongx"]     = {"dkong_func", {234,009}, {096,044}, CYN, false, false, 1}
 	rom_table["dkongx11"]   = {"dkong_func", {234,009}, {096,044}, CYN, false, false, 1}
@@ -84,7 +84,6 @@ function continue.startplugin()
 		"8ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwwxyy8","8ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwwxyy8",
 		"8ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwwxyy8","8ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwwxyy8",
 		"8ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwwxyy8","*","*","*","*","*","*","*","*","*"}
-
 	message_data_rotated = {"+","+","+","+","+","+","+","+","9A97?8","9A97?8","9B99!3!8","9B99!3!8","9C99!3!8","9C99&!8","9D991@!9","9D9994",
 		"9E98&@8","9E95!1?8","9F95!1!95","9F8?1!95","9G8?1!95","9G95!1?8","9H95!2&@8","9H9994","9I9&!3!2@9","9I8?1@1&8","9J8!5!1!2!2!8",
 		"9J8!5!1!2!2!8","9K8!5!1!2!1@8","9K8?1&1!9","9L9&!3@93","9L9994","9M97?8","9M97?8","9N991!92","9N991!92","9O991!92","9O97?8","9P97?8",
@@ -102,20 +101,28 @@ function continue.startplugin()
 	function dfend_func()
 		-- Work in progress
 		-- ROM disassembly at https://computerarcheology.com/Arcade/Defender
+		h_mode = read(0xa17d)  -- not playing == 0
 		h_remain_lives = read(0xa1c9)
-		b_show_tally = true
-		b_reset_tally = true
-		i_stop = true -- testing
+		b_show_tally = h_mode > 0
+		b_reset_tally = read(0x3e80, 1) or h_mode == 0 or i_tally == nil  -- 0x3e80 is gameover flag
+		b_1p_game = read(0xa08b, 1) and read(0xa08c, 1)
 		b_push_p1 = i_stop and to_bits(ports[":IN0"]:read())[6] == 1
-		b_almost_gameover = h_remain_lives == 0 and read(0xa031, 7)  -- death flag goes from 00 (alive) to FF (dead)
+		b_almost_gameover = h_mode > 0 and h_remain_lives == 0 and read(0xa031, 7)  -- death flag goes from 00 (alive) to FF (dead)
 
-		-- see file phr6.src
-		-- for reference: credits are at 0xa037
-		--some timer = a06e
-
-		if b_almost_gameover then
-			reset(0xa1c2, 5)  -- reset score
-			mem:write_u8(0xa1c9, 3)  -- reset lives
+		if b_1p_game then
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 135
+				video.throttle_rate = 0.225 -- adjust emulation speed to allow 10 seconds to make decision
+				sound.attenuation = -32 -- mute sounds
+			end
+			if i_stop and i_stop > i_frame then
+				draw_continue_box(4)
+				if b_push_p1 then
+					i_tally = i_tally + 1 ; i_stop = nil
+					mem:write_u8(0xa1c9, 3)  -- reset lives
+					reset(0xa1c2, 5)  -- reset score
+				end
+			end
 		end
 	end
 
@@ -828,5 +835,14 @@ function continue.startplugin()
 	end)
 
 	emu.register_frame_done(main, "frame")
+
 end
+
+-- test
+--package.path = package.path..";"..emu.subst_env(manager.options.entries.pluginspath:value()).."/continue/?.lua;"
+--require("dfend")
+--loadfile(emu.subst_env(manager.options.entries.pluginspath:value()).."/continue/dfend.lua")
+--dofile(emu.subst_env(manager.options.entries.pluginspath:value()).."/continue/dfend.lua")
+
 return exports
+
