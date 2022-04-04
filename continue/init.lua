@@ -104,7 +104,7 @@ function continue.startplugin()
 		h_mode = read(0xa17d)  -- not playing == 0
 		h_remain_lives = read(0xa1c9)
 		b_show_tally = h_mode > 0
-		b_reset_tally = read(0x3e80, 1) or h_mode == 0 or i_tally == nil  -- 0x3e80 is gameover flag
+		b_reset_tally = read(0x3e80, 1) or i_tally == nil  -- 0x3e80 is gameover flag
 		b_1p_game = read(0xa08b, 1) and read(0xa08c, 1)
 		b_push_p1 = i_stop and to_bits(ports[":IN0"]:read())[6] == 1
 		b_almost_gameover = h_mode > 0 and h_remain_lives == 0 and read(0xa031, 7)  -- death flag goes from 00 (alive) to FF (dead)
@@ -119,8 +119,9 @@ function continue.startplugin()
 				draw_continue_box(4)
 				if b_push_p1 then
 					i_tally = i_tally + 1 ; i_stop = nil
-					mem:write_u8(0xa1c9, 3)  -- reset lives
 					reset(0xa1c2, 5)  -- reset score
+					mem:write_u8(0xa1c9, 2)  -- reset lives
+					--TODO: Refresh lives on screen
 				end
 			end
 		end
