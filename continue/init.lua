@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------------------
 local exports = {}
 exports.name = "continue"
-exports.version = "0.18"
+exports.version = "0.19"
 exports.description = "Continue plugin"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -72,6 +72,7 @@ function continue.startplugin()
 	rom_table["robotron12"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
 	rom_table["robotronyo"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
 	rom_table["robotron87"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
+	rom_table["scramble"]   = {"scram_func", {055,206}, {240,032}, YEL, true,  false, 3}
 	rom_table["sinistar"]   = {"snstr_func", {287,001}, {102,052}, WHT, false, false, 1}
 
 	-- encoded message data
@@ -98,16 +99,52 @@ function continue.startplugin()
 	---------------------------------------------------------------------------
 	-- Game specific functions
 	---------------------------------------------------------------------------
+	function scram_func()
+		-- ROM disassembly at http://seanriddle.com/scramble.asm
+		h_mode = read(0x4006)  -- 1 == playing
+		h_remain_lives = read(0x4108)
+		h_start_lives = read(0x4007)
+		b_show_tally = h_mode == 1
+		b_reset_tally = h_mode ~= 1 or i_tally == nil
+		b_1p_game = read(0x400e, 0)
+		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[8] == nil
+		b_almost_gameover = h_mode == 1 and h_remain_lives == 0 and read(0x438f, 0x67)  -- 0x438c is explosion counter
+
+		if b_1p_game then
+			if b_almost_gameover and not i_stop then
+				i_stop = i_frame + 300
+				video.throttle_rate = 0.5
+			end
+			if i_stop and i_stop > i_frame then
+				mem:write_u8(0x438f, 0x10)
+				draw_continue_box(2)
+				if b_push_p1 then
+					i_tally = i_tally + 1 ; i_stop = nil
+					mem:write_u8(0x4108, h_start_lives)  -- reset lives
+					reset(0x40a2, 3)  -- reset score in memory
+					-- reset score on screen
+					mem:write_u8(0x4ee1, 0); mem:write_u8(0x4f01, 0)
+					for _addr=0x4f21, 0x4fc1, 0x20 do mem:write_u8(_addr, 0x10) end
+				end
+			end
+		end
+	end
+
 	function dfend_func()
-		-- Work in progress
 		-- ROM disassembly at https://computerarcheology.com/Arcade/Defender
 		h_mode = read(0xa17d)  -- not playing == 0
 		h_remain_lives = read(0xa1c9)
+		h_start_lives = 3
 		b_show_tally = h_mode > 0
 		b_reset_tally = read(0x3e80, 1) or i_tally == nil  -- 0x3e80 is gameover flag
 		b_1p_game = read(0xa08b, 1) and read(0xa08c, 1)
 		b_push_p1 = i_stop and to_bits(ports[":IN0"]:read())[6] == 1
 		b_almost_gameover = h_mode > 0 and h_remain_lives == 0 and read(0xa031, 7)  -- death flag goes from 00 (alive) to FF (dead)
+
+		if _reset_frame and i_frame >= _reset_frame then
+			mem:write_u8(0xa1c9, h_start_lives - 2)  -- adjust lives down so number of ships displays correctly on next death
+			_reset_frame = nil
+		end
 
 		if b_1p_game then
 			if b_almost_gameover and not i_stop then
@@ -118,10 +155,10 @@ function continue.startplugin()
 			if i_stop and i_stop > i_frame then
 				draw_continue_box(4)
 				if b_push_p1 then
+					_reset_frame = i_stop + 30  -- lives are adjusted down at this frame
 					i_tally = i_tally + 1 ; i_stop = nil
 					reset(0xa1c2, 5)  -- reset score
-					mem:write_u8(0xa1c9, 2)  -- reset lives
-					--TODO: Refresh lives on screen
+					mem:write_u8(0xa1c9, h_start_lives)  -- reset lives
 				end
 			end
 		end
@@ -836,14 +873,7 @@ function continue.startplugin()
 	end)
 
 	emu.register_frame_done(main, "frame")
-
 end
-
--- test
---package.path = package.path..";"..emu.subst_env(manager.options.entries.pluginspath:value()).."/continue/?.lua;"
---require("dfend")
---loadfile(emu.subst_env(manager.options.entries.pluginspath:value()).."/continue/dfend.lua")
---dofile(emu.subst_env(manager.options.entries.pluginspath:value()).."/continue/dfend.lua")
 
 return exports
 

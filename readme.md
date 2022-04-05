@@ -20,6 +20,8 @@ The plugin currently supports these games:
 - Q*bert
 - Donkey Kong
 - Donkey Kong Junior
+- Defender
+- Scramble
 - Robotron
 - Sinistar
 - Berzerk
@@ -64,13 +66,16 @@ The MAMEdev team
 Scott Lawrence (BleuLlama) for Pac-Man/Ms.Pac-Man ROM Disassembly resources at:
 - https://github.com/BleuLlama/GameDocs/blob/master/disassemble/mspac.asm
 
-Scott Tunstall Galaxians, Robotron and Berzerk ROM disassembly resources at:
+Scott Tunstall for Galaxians, Robotron, Berzerk and Scramble ROM disassembly resources at:
 - http://seanriddle.com/willy3.html#soft
 
 Kef Schecter (furrykey) for Donkey Kong ROM disassembly resources at:
 - https://github.com/furrykef/dkdasm/blob/master/dkong.asm
 
-Rich McFerron for Space Invaders and Crazy Climber ROM disassembly resources at:
+Rich McFerron for Crazy Climber ROM disassembly resources at:
+- https://computerarcheology.com/Arcade/
+
+Harry Hurst for Defender ROM disassembly resources at:
 - https://computerarcheology.com/Arcade/
 
 nmikstas for Asteroids ROM disassembly resources at:
