@@ -74,6 +74,8 @@ function continue.startplugin()
 	rom_table["robotron87"] = {"rbtrn_func", {000,015}, {184,096}, YEL, true,  true,  1}
 	rom_table["scramble"]   = {"scram_func", {055,206}, {240,032}, YEL, true,  false, 3}
 	rom_table["sinistar"]   = {"snstr_func", {287,001}, {102,052}, WHT, false, false, 1}
+	rom_table["sinistar2"]  = {"snstr_func", {287,001}, {102,052}, WHT, false, false, 1}
+	rom_table["sinistarp"]  = {"snstr_func", {287,001}, {102,052}, WHT, false, false, 1}
 
 	-- encoded message data
 	message_data = {"*","*","*","*","*","*","*","*","8&@2@3@2&3@3@9&@5@93&4&@3@!3&@3&@8","8@3@1@3@1@2@2@3@9@3@3@!92@2@5@4@1@2@3@4@91",
@@ -293,6 +295,7 @@ function continue.startplugin()
 	end
 
 	function rbtrn_func()
+		-- Figured out using MAME debugger & ROM disassembly at http://seanriddle.com/willy3.html#soft
 		h_mode = read(0x98d1)  -- 0=high score screen, 1=attract mode, 2=playing
 		h_start_lives = 3
 		h_remain_lives = read(0xbdec)
@@ -647,17 +650,18 @@ function continue.startplugin()
 			_ships[5]={0xff00515f,0xff00515f,0xff8989a0,0xff00515f,0xff00515f}
 		end
 
-		h_mode = read(0x9896)  -- 1==attract mode, 0==playing
-		h_start_lives = 3
+		if emu.romname() == "sinistarp" then _offset = 3 else _offset = 0 end  -- prototype has some memory offset
+		h_mode = read(0x9896 - _offset)  -- 1==attract mode, 0==playing
+		h_start_lives = read(0xcc05) - 0xf0 -- read lives from CMOS
 		h_remain_lives = read(0x9ffc)
-		b_1p_game = read(0x988a, 1)
+		b_1p_game = read(0x988a - _offset, 1)
 		b_reset_tally = not b_1p_game or i_tally == nil
 		b_show_tally = h_mode == 0
 		b_push_p1 = i_stop and to_bits(ports[":IN1"]:read())[5] == 1
 		if _dead_cnt and read(0xa1ba, 1) then _dead_cnt = _dead_cnt + 1 else _dead_cnt = 0 end
 		b_almost_gameover = h_mode == 0 and h_remain_lives == 0 and read(0xa1ba, 1) and _dead_cnt == 40
 
-		if h_mode == 0 then  -- redraw remaining ships
+		if h_mode == 0 and read(0x9896 - _offset, 0) then  -- 0x9896==0 when not in attract mode. redraw remaining ships
 			for _i=1, h_remain_lives - bool_to_int(dead_cnt and dead_cnt > 0) do draw_sprite(_ships,251,6+(_i*6)) end
 		end
 
